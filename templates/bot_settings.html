@@ -43,6 +43,24 @@
                         <div class="form-text">機器人的預設回應風格</div>
                     </div>
                     
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="rag_enabled" name="rag_enabled" {% if rag_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="rag_enabled">啟用知識庫增強生成 (RAG)</label>
+                        <div class="form-text">使用知識庫中的資料來增強回應</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="web_search_enabled" name="web_search_enabled" {% if web_search_enabled %}checked{% endif %}>
+                        <label class="form-check-label" for="web_search_enabled">啟用網路搜尋功能</label>
+                        <div class="form-text">允許機器人使用網路搜尋來回答問題</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="serpapi_key" class="form-label">SerpAPI 金鑰</label>
+                        <input type="text" class="form-control" id="serpapi_key" name="serpapi_key" value="{{ serpapi_key }}">
+                        <div class="form-text">用於網路搜尋功能的 SerpAPI 金鑰（僅在啟用網路搜尋時需要）</div>
+                    </div>
+                    
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                         <button type="submit" class="btn btn-primary">儲存設定</button>
                     </div>

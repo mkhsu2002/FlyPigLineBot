@@ -55,6 +55,8 @@ class BotSettingsForm(FlaskForm):
     channel_access_token = StringField('Channel Access Token', validators=[DataRequired()])
     active_style = SelectField('Active Style', validators=[DataRequired()])
     rag_enabled = BooleanField('Enable RAG (Retrieval Augmented Generation)')
+    web_search_enabled = BooleanField('Enable Web Search')
+    serpapi_key = StringField('SerpAPI Key', validators=[Optional()])
     submit = SubmitField('Save Settings')
 
 class DocumentForm(FlaskForm):
