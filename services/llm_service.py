@@ -3,8 +3,6 @@ import json
 import logging
 from openai import OpenAI
 from routes.utils.config_service import ConfigManager, get_openai_api_key, get_llm_settings
-import models
-from app import db
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +22,10 @@ class LLMService:
     @staticmethod
     def get_bot_style(style_name=None):
         """Get the bot style prompt by name or use the active style"""
+        # Import here to avoid circular imports
+        from app import db
+        import models
+        
         if not style_name:
             style_name = ConfigManager.get("ACTIVE_BOT_STYLE", "預設")
         

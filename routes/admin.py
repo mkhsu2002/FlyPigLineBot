@@ -3,10 +3,11 @@ import logging
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from models import BotStyle, Config, ChatMessage, Document, LineUser, User, db
+from models import BotStyle, Config, ChatMessage, Document, LineUser, User
+from app import db
 from forms import LLMSettingsForm, BotStyleForm, BotSettingsForm, DocumentForm, UserForm
-from config import ConfigManager
-from llm_service import LLMService
+from routes.utils.config_service import ConfigManager
+from services.llm_service import LLMService
 from rag_service import RAGService
 
 admin_bp = Blueprint('admin', __name__)

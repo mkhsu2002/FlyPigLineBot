@@ -11,6 +11,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import json
 from datetime import datetime
 from sqlalchemy.orm import DeclarativeBase
+from services.llm_service import LLMService
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
@@ -478,8 +479,8 @@ def get_webhook_handler():
                 style_name = user_message[7:].strip()
                 response_text = f"風格已設定為: {style_name}"
             else:
-                # Generate response using OpenAI
-                response_text = generate_response(user_message, bot_style)
+                # Generate response using LLMService
+                response_text = LLMService.generate_response(user_message, bot_style)
             
             # Save bot response to database
             bot_message = ChatMessage(
@@ -510,8 +511,8 @@ def api_chat():
     user_message = data['message']
     style = data.get('style')
     
-    # Generate response
-    response = generate_response(user_message, style)
+    # Generate response using LLMService
+    response = LLMService.generate_response(user_message, style)
     
     return {'response': response}
 
