@@ -1,4 +1,4 @@
-# FlyPig LINE 聊天機器人
+# FlyPig LINE 聊天機器人 V2.0
 
 FlyPig 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專為「和宸清潔庇護工場」設計，用於關懷弱勢群體和公益活動。機器人具有多種人格風格，並提供完整的管理後台，讓非技術人員也能輕鬆管理和調整機器人行為。
 
@@ -10,6 +10,7 @@ FlyPig 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專為「和�
 - 🛠️ 可自定義機器人的回應風格和提示詞
 - 🔒 安全的用戶管理和訪問控制
 - 🌐 支持繁體中文界面和互動
+- 📚 知識庫整合 (RAG) 和網路搜尋功能
 
 ## 🔧 技術架構
 
@@ -18,6 +19,8 @@ FlyPig 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專為「和�
 - **AI**：OpenAI GPT-4o
 - **消息平台**：LINE Messaging API
 - **前端**：Bootstrap + Jinja2 模板
+- **向量搜索**：FAISS (Facebook AI Similarity Search)
+- **Web 搜索**：SerpAPI 整合
 
 ## 📋 安裝與設置
 
@@ -26,6 +29,8 @@ FlyPig 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專為「和�
 - Python 3.9+
 - OpenAI API 密鑰
 - LINE Developers 帳戶和頻道設定
+- SerpAPI 密鑰 (選用，用於網路搜尋功能)
+- 足夠的記憶體用於向量搜索（推薦至少 1GB RAM）
 
 ### 安裝步驟
 
@@ -104,11 +109,30 @@ default_styles = [
 
 在管理後台的「LLM 設定」頁面中，填入您的 OpenAI API 密鑰。您也可以調整溫度和最大生成令牌數，以控制回應的創意性和長度。
 
+### 5. 知識庫與網路搜尋功能
+
+#### 知識庫 (RAG) 功能
+機器人支援 Retrieval Augmented Generation (RAG) 功能，可將自定義的知識文件加入系統，使機器人能夠回答特定領域的問題：
+
+1. 在管理後台的「知識庫」頁面中，上傳 TXT、PDF、DOCX 或 MD 格式的文件
+2. 系統會自動處理文件並建立向量索引
+3. 啟用 RAG 功能後，機器人回答用戶問題時會參考相關知識
+4. 您可以隨時更新、刪除或重建知識庫
+
+#### 網路搜尋功能
+機器人支援實時網路搜尋功能，能夠為用戶提供最新的網路資訊：
+
+1. 在「機器人設定」頁面啟用網路搜尋功能
+2. 填入 SerpAPI 密鑰（需要先註冊 [SerpAPI](https://serpapi.com/) 獲取）
+3. 啟用後，機器人會在適當的時機使用網路搜尋來補充回答
+
 ## 📄 自訂檔案說明
 
 - **main.py**: 主程式入口，包含基本路由和模型定義
 - **services/llm_service.py**: OpenAI 服務和機器人風格處理
 - **routes/**: 路由和 API 處理（admin.py, auth.py, webhook.py）
+- **rag_service.py**: 知識庫和向量搜索實現
+- **web_search_service.py**: 網路搜尋服務實現
 - **static/**: CSS、JS 和其他靜態文件
 - **templates/**: HTML 模板文件
 - **models.py**: 數據庫模型定義
@@ -155,5 +179,5 @@ SOFTWARE.
 ---
 
 開發者：FlyPig AI  
-版本：1.0.0  
-最後更新：2025年3月
+版本：2.0.0  
+最後更新：2025年3月6日
