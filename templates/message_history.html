@@ -1,18 +1,18 @@
 {% extends 'base.html' %}
 
-{% block title %}Message History{% endblock %}
+{% block title %}訊息記錄{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Message History</h1>
+<h1 class="mb-4">訊息記錄</h1>
 
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header d-flex justify-content-between align-items-center">
-                <h5 class="mb-0">Chat Messages</h5>
+                <h5 class="mb-0">聊天訊息</h5>
                 <div>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBtn">
-                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                        <i class="bi bi-arrow-clockwise"></i> 重新整理
                     </button>
                 </div>
             </div>
@@ -21,12 +21,12 @@
                     <table class="table table-hover mb-0">
                         <thead>
                             <tr>
-                                <th>User ID</th>
-                                <th>Type</th>
-                                <th>Message</th>
-                                <th>Style</th>
-                                <th>Timestamp</th>
-                                <th>Actions</th>
+                                <th>用戶 ID</th>
+                                <th>類型</th>
+                                <th>訊息</th>
+                                <th>風格</th>
+                                <th>時間戳記</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -35,9 +35,9 @@
                                 <td>{{ message.line_user_id[:8] }}...</td>
                                 <td>
                                     {% if message.is_user_message %}
-                                    <span class="badge bg-primary">User</span>
+                                    <span class="badge bg-primary">用戶</span>
                                     {% else %}
-                                    <span class="badge bg-success">Bot</span>
+                                    <span class="badge bg-success">機器人</span>
                                     {% endif %}
                                 </td>
                                 <td class="view-message" data-message="{{ message.message_text }}">
@@ -50,15 +50,15 @@
                                             data-bs-toggle="modal" data-bs-target="#viewMessageModal"
                                             data-message="{{ message.message_text }}"
                                             data-user-id="{{ message.line_user_id }}"
-                                            data-type="{% if message.is_user_message %}User{% else %}Bot{% endif %}"
+                                            data-type="{% if message.is_user_message %}用戶{% else %}機器人{% endif %}"
                                             data-timestamp="{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}">
-                                        View
+                                        查看
                                     </button>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="6" class="text-center py-3">No messages yet</td>
+                                <td colspan="6" class="text-center py-3">尚無訊息</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -74,26 +74,26 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">View Message</h5>
+                <h5 class="modal-title">查看訊息</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <div class="mb-3">
-                    <strong>User ID:</strong> <span id="modalUserId"></span>
+                    <strong>用戶 ID:</strong> <span id="modalUserId"></span>
                 </div>
                 <div class="mb-3">
-                    <strong>Type:</strong> <span id="modalType"></span>
+                    <strong>類型:</strong> <span id="modalType"></span>
                 </div>
                 <div class="mb-3">
-                    <strong>Timestamp:</strong> <span id="modalTimestamp"></span>
+                    <strong>時間戳記:</strong> <span id="modalTimestamp"></span>
                 </div>
                 <div class="mb-3">
-                    <strong>Message:</strong>
+                    <strong>訊息:</strong>
                     <div id="messageContent" class="p-3 bg-dark text-light rounded"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
             </div>
         </div>
     </div>

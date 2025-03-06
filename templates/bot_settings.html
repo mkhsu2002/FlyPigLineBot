@@ -1,38 +1,38 @@
 {% extends 'base.html' %}
 
-{% block title %}Bot Settings{% endblock %}
+{% block title %}機器人設定{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">LINE Bot Settings</h1>
+<h1 class="mb-4">LINE 機器人設定</h1>
 
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Bot Configuration</h5>
+                <h5 class="mb-0">機器人設定</h5>
             </div>
             <div class="card-body">
                 <form action="{{ url_for('bot_settings') }}" method="POST">
                     <div class="mb-3">
                         <label for="channel_id" class="form-label">Channel ID</label>
                         <input type="text" class="form-control" id="channel_id" name="channel_id" value="{{ config.channel_id }}" required>
-                        <div class="form-text">Your LINE Messaging API channel ID</div>
+                        <div class="form-text">您的 LINE Messaging API channel ID</div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="channel_secret" class="form-label">Channel Secret</label>
                         <input type="text" class="form-control" id="channel_secret" name="channel_secret" value="{{ config.channel_secret }}" required>
-                        <div class="form-text">Your LINE Messaging API channel secret</div>
+                        <div class="form-text">您的 LINE Messaging API channel secret</div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="channel_access_token" class="form-label">Channel Access Token</label>
                         <input type="text" class="form-control" id="channel_access_token" name="channel_access_token" value="{{ config.channel_access_token }}" required>
-                        <div class="form-text">Your LINE Messaging API channel access token</div>
+                        <div class="form-text">您的 LINE Messaging API channel access token</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="active_style" class="form-label">Active Bot Style</label>
+                        <label for="active_style" class="form-label">預設回應風格</label>
                         <select class="form-select" id="active_style" name="active_style" required>
                             {% for style in styles %}
                             <option value="{{ style.name }}" {% if style.name == active_style %}selected{% endif %}>
@@ -40,11 +40,11 @@
                             </option>
                             {% endfor %}
                         </select>
-                        <div class="form-text">The default response style for your bot</div>
+                        <div class="form-text">機器人的預設回應風格</div>
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                        <button type="submit" class="btn btn-primary">儲存設定</button>
                     </div>
                 </form>
             </div>
@@ -59,12 +59,12 @@
                 <h5 class="mb-0">Webhook URL</h5>
             </div>
             <div class="card-body">
-                <p class="mb-2">Use the following URL in your LINE Developers Console:</p>
+                <p class="mb-2">在您的 LINE 開發者控制台中使用以下網址：</p>
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" id="webhookUrl" value="{{ request.host_url }}webhook" readonly>
-                    <button class="btn btn-outline-secondary" type="button" id="copyWebhook" onclick="copyWebhookUrl()">Copy</button>
+                    <button class="btn btn-outline-secondary" type="button" id="copyWebhook" onclick="copyWebhookUrl()">複製</button>
                 </div>
-                <p class="small text-muted mb-0">This is the URL that LINE will use to send messages to your bot.</p>
+                <p class="small text-muted mb-0">這是 LINE 用來發送訊息到您的機器人的網址。</p>
             </div>
         </div>
     </div>
@@ -80,9 +80,9 @@ function copyWebhookUrl() {
     navigator.clipboard.writeText(copyText.value);
     
     var copyBtn = document.getElementById("copyWebhook");
-    copyBtn.innerHTML = "Copied!";
+    copyBtn.innerHTML = "已複製!";
     setTimeout(function() {
-        copyBtn.innerHTML = "Copy";
+        copyBtn.innerHTML = "複製";
     }, 2000);
 }
 </script>

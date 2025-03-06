@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="en" data-bs-theme="dark">
+<html lang="zh-Hant" data-bs-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FlyPig LINE Bot - {% block title %}{% endblock %}</title>
+    <title>FlyPig LINE 機器人 - {% block title %}{% endblock %}</title>
     <link rel="stylesheet" href="https://cdn.replit.com/agent/bootstrap-agent-dark-theme.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
         <div class="container">
-            <a class="navbar-brand" href="{{ url_for('index') }}">FlyPig LINE Bot</a>
+            <a class="navbar-brand" href="{{ url_for('index') }}">FlyPig LINE 機器人</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
@@ -18,24 +18,24 @@
                 {% if current_user.is_authenticated %}
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">Dashboard</a>
+                        <a class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}" href="{{ url_for('dashboard') }}">儀表板</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'bot_settings' %}active{% endif %}" href="{{ url_for('bot_settings') }}">Bot Settings</a>
+                        <a class="nav-link {% if request.endpoint == 'bot_settings' %}active{% endif %}" href="{{ url_for('bot_settings') }}">機器人設定</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'llm_settings' %}active{% endif %}" href="{{ url_for('llm_settings') }}">LLM Settings</a>
+                        <a class="nav-link {% if request.endpoint == 'llm_settings' %}active{% endif %}" href="{{ url_for('llm_settings') }}">LLM 設定</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'bot_styles' %}active{% endif %}" href="{{ url_for('bot_styles') }}">Bot Styles</a>
+                        <a class="nav-link {% if request.endpoint == 'bot_styles' %}active{% endif %}" href="{{ url_for('bot_styles') }}">回應風格</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint == 'message_history' %}active{% endif %}" href="{{ url_for('message_history') }}">Message History</a>
+                        <a class="nav-link {% if request.endpoint == 'message_history' %}active{% endif %}" href="{{ url_for('message_history') }}">訊息記錄</a>
                     </li>
                 </ul>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                        <a class="nav-link" href="{{ url_for('logout') }}">登出</a>
                     </li>
                 </ul>
                 {% endif %}
@@ -60,7 +60,7 @@
 
     <footer class="footer py-3 bg-dark mt-auto">
         <div class="container text-center">
-            <span class="text-muted">FlyPig LINE Bot &copy; 2025</span>
+            <span class="text-muted">FlyPig LINE 機器人 &copy; 2025</span>
         </div>
     </footer>
 

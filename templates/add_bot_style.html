@@ -1,39 +1,39 @@
 {% extends 'base.html' %}
 
-{% block title %}Add Bot Style{% endblock %}
+{% block title %}新增回應風格{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Add Bot Style</h1>
+<h1 class="mb-4">新增回應風格</h1>
 
 <div class="row">
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">New Bot Style</h5>
+                <h5 class="mb-0">新風格</h5>
             </div>
             <div class="card-body">
                 <form action="{{ url_for('add_bot_style') }}" method="POST">
                     <div class="mb-3">
-                        <label for="name" class="form-label">Style Name</label>
+                        <label for="name" class="form-label">風格名稱</label>
                         <input type="text" class="form-control" id="name" name="name" required>
-                        <div class="form-text">Give your style a unique name</div>
+                        <div class="form-text">為您的風格取一個獨特的名稱</div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="prompt" class="form-label">System Prompt</label>
+                        <label for="prompt" class="form-label">系統提示詞</label>
                         <textarea class="form-control" id="prompt" name="prompt" rows="8" required></textarea>
-                        <div class="form-text">The system prompt that defines this style's behavior</div>
+                        <div class="form-text">定義此風格行為的系統提示詞</div>
                     </div>
                     
                     <div class="mb-3 form-check">
                         <input type="checkbox" class="form-check-input" id="is_default" name="is_default">
-                        <label class="form-check-label" for="is_default">Set as Default Style</label>
-                        <div class="form-text">If checked, this style will become the default for all new conversations</div>
+                        <label class="form-check-label" for="is_default">設為預設風格</label>
+                        <div class="form-text">如果勾選，這個風格將成為所有新對話的預設風格</div>
                     </div>
                     
                     <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{{ url_for('bot_styles') }}" class="btn btn-secondary me-md-2">Cancel</a>
-                        <button type="submit" class="btn btn-primary">Save Style</button>
+                        <a href="{{ url_for('bot_styles') }}" class="btn btn-secondary me-md-2">取消</a>
+                        <button type="submit" class="btn btn-primary">儲存風格</button>
                     </div>
                 </form>
             </div>
@@ -45,16 +45,16 @@
     <div class="col-md-12">
         <div class="card">
             <div class="card-header">
-                <h5 class="mb-0">Preset Templates</h5>
+                <h5 class="mb-0">預設模板</h5>
             </div>
             <div class="card-body">
-                <p>Choose from these preset templates:</p>
+                <p>從這些預設模板中選擇：</p>
                 <div class="mb-3">
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('conversational')">Conversational</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('professional')">Professional</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('creative')">Creative</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('friendly')">Friendly</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('technical')">Technical</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('conversational')">對話式</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('professional')">專業型</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('creative')">創意型</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('friendly')">友善型</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('technical')">技術型</button>
                 </div>
             </div>
         </div>
@@ -69,19 +69,19 @@ function loadTemplate(template) {
     
     switch(template) {
         case 'conversational':
-            prompt = 'You are a conversational assistant that speaks in a casual, friendly manner. Use natural language, contractions, and occasionally emoji. Keep responses concise and engaging, as if chatting with a friend.';
+            prompt = '你是一個以輕鬆友好的方式交談的助手。使用自然語言，口語化表達，偶爾使用表情符號。保持回應簡潔有趣，就像與朋友聊天一樣。請用繁體中文回答。';
             break;
         case 'professional':
-            prompt = 'You are a professional assistant that provides formal, precise responses. Avoid colloquialisms, maintain a respectful tone, and organize information clearly. Be comprehensive but concise, prioritizing accuracy and clarity.';
+            prompt = '你是一個提供正式、精確回應的專業助手。避免使用口語化表達，保持尊重的語調，並清晰地組織信息。回答要全面但簡潔，優先考慮準確性和清晰度。請用繁體中文回答。';
             break;
         case 'creative':
-            prompt = 'You are a creative assistant with a vivid imagination. Use expressive language, varied sentence structures, and occasional metaphors. Be descriptive and think outside the box when responding to questions or requests.';
+            prompt = '你是一個具有豐富想像力的創意助手。使用生動的語言，多變的句式結構，偶爾使用比喻。在回應問題或請求時要有描述性，跳脫框架思考。請用繁體中文回答。';
             break;
         case 'friendly':
-            prompt = 'You are a friendly assistant who responds with warmth and enthusiasm. Use a positive tone, supportive language, and show empathy. Make the user feel comfortable and brighten their day with your helpful responses.';
+            prompt = '你是一個以熱情和溫暖回應的友善助手。使用積極的語調，支持性的語言，並表現出同理心。使用戶感到舒適，並用你的有用回應讓他們的一天更美好。請用繁體中文回答。';
             break;
         case 'technical':
-            prompt = 'You are a technical assistant that provides detailed, precise information. Use industry-appropriate terminology, structured explanations, and factual references. Prioritize accuracy and depth in your responses to technical questions.';
+            prompt = '你是一個提供詳細、精確信息的技術助手。使用適合行業的術語，結構化的解釋和事實性參考。在回答技術問題時優先考慮準確性和深度。請用繁體中文回答。';
             break;
         default:
             return;
