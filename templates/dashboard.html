@@ -86,6 +86,38 @@
 
 <div class="row mt-4">
     <div class="col-md-12">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0">系統狀態</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>API 狀態</h6>
+                        <p>
+                            <i class="fas fa-{% if api_status %}check-circle text-success{% else %}times-circle text-danger{% endif %} me-2"></i>
+                            OpenAI API: {% if api_status %}連接正常{% else %}無法連接{% endif %}
+                        </p>
+                        <p>
+                            <i class="fas fa-{% if active_style %}check-circle text-success{% else %}exclamation-circle text-warning{% endif %} me-2"></i>
+                            預設風格: {{ active_style or '未設定' }}
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>功能狀態</h6>
+                        <p>
+                            <i class="fas fa-{% if rag_enabled %}check-circle text-success{% else %}times-circle text-secondary{% endif %} me-2"></i>
+                            知識庫 (RAG): {% if rag_enabled %}已啟用{% else %}已停用{% endif %}
+                        </p>
+                        <p>
+                            <i class="fas fa-{% if web_search_enabled %}check-circle text-success{% else %}times-circle text-secondary{% endif %} me-2"></i>
+                            網路搜尋: {% if web_search_enabled %}已啟用{% else %}已停用{% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
         <div class="card">
             <div class="card-header">
                 <h5 class="mb-0">快速連結</h5>
@@ -111,9 +143,9 @@
                         </a>
                     </div>
                     <div class="col-md-6 mb-3">
-                        <a href="{{ url_for('message_history') }}" class="btn btn-outline-secondary w-100 p-3">
-                            <h4>訊息記錄</h4>
-                            <p class="mb-0">查看完整訊息歷史記錄</p>
+                        <a href="{{ url_for('knowledge_base') }}" class="btn btn-outline-secondary w-100 p-3">
+                            <h4>知識庫</h4>
+                            <p class="mb-0">管理機器人知識庫</p>
                         </a>
                     </div>
                 </div>

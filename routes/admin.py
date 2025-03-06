@@ -109,6 +109,8 @@ def bot_settings():
         form.channel_access_token.data = ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "VaPdPpIRKyOT8VQHAu3bt/KfCy4pJmLL0O76mv5NTtakPiDrDDEyXLPiNqvldZJlMUnLSJ+sWhNpdXgXpm7SiB4bHVJFbnagaftL6IX3PGz7n/msUBX//L2s/OvuLaNcfTMA1a20CuwIzgoGjiTzMgdB04t89/1O/w1cDnyilFU=")
         form.active_style.data = ConfigManager.get("ACTIVE_BOT_STYLE", "Default")
         form.rag_enabled.data = ConfigManager.get("RAG_ENABLED", "True") == "True"
+        form.web_search_enabled.data = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
+        form.serpapi_key.data = ConfigManager.get("SERPAPI_KEY", "")
     
     # Process form submission
     if form.validate_on_submit():
@@ -118,6 +120,8 @@ def bot_settings():
         ConfigManager.set("LINE_CHANNEL_ACCESS_TOKEN", form.channel_access_token.data)
         ConfigManager.set("ACTIVE_BOT_STYLE", form.active_style.data)
         ConfigManager.set("RAG_ENABLED", str(form.rag_enabled.data))
+        ConfigManager.set("WEB_SEARCH_ENABLED", str(form.web_search_enabled.data))
+        ConfigManager.set("SERPAPI_KEY", form.serpapi_key.data)
         
         flash('Bot settings updated successfully.', 'success')
         return redirect(url_for('admin.bot_settings'))
@@ -125,7 +129,16 @@ def bot_settings():
     # Get the webhook URL for display
     webhook_url = request.host_url.rstrip('/') + url_for('webhook.line_webhook')
     
-    return render_template('bot_settings.html', form=form, webhook_url=webhook_url)
+    return render_template(
+        'bot_settings.html', 
+        form=form, 
+        webhook_url=webhook_url,
+        styles=styles,
+        active_style=ConfigManager.get("ACTIVE_BOT_STYLE", "Default"),
+        rag_enabled=ConfigManager.get("RAG_ENABLED", "True") == "True",
+        web_search_enabled=ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True",
+        serpapi_key=ConfigManager.get("SERPAPI_KEY", "")
+    )
 
 # Bot Styles
 @admin_bp.route('/bot_styles')
