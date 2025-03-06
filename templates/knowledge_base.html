@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block title %}Knowledge Base - FlyPig LINE Bot Admin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-book me-2"></i>Knowledge Base</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- Document List -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Knowledge Base Documents</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
+                        <i class="fas fa-plus me-1"></i> Add Document
+                    </button>
+                    <form method="POST" action="{{ url_for('admin.rebuild_index') }}" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-light">
+                            <i class="fas fa-sync me-1"></i> Rebuild Index
+                        </button>
+                    </form>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Title</th>
+                                <th>Source</th>
+                                <th>Uploaded</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>{{ doc.title }}</td>
+                                <td>{{ doc.filename if doc.filename else 'Direct Input' }}</td>
+                                <td>{{ doc.uploaded_at.strftime('%Y-%m-%d') }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary view-document"
+                                                data-id="{{ doc.id }}" data-bs-toggle="modal" data-bs-target="#viewDocumentModal">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger delete-document"
+                                                data-id="{{ doc.id }}" data-title="{{ doc.title }}"
+                                                data-bs-toggle="modal" data-bs-target="#deleteDocumentModal">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No documents in the knowledge base</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>About RAG</h5>
+            </div>
+            <div class="card-body">
+                <p>Retrieval Augmented Generation (RAG) enhances your bot's responses by referencing your knowledge base.</p>
+                <p>When a user asks a question, the system:</p>
+                <ol>
+                    <li>Searches the knowledge base for relevant information</li>
+                    <li>Retrieves the most similar documents</li>
+                    <li>Provides this context to the AI model</li>
+                    <li>Generates a response informed by your custom data</li>
+                </ol>
+                <p>This allows your bot to answer questions about specific topics with accurate, up-to-date information from your documents.</p>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning">
+                <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Document Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Add factual, relevant content to your knowledge base</li>
+                    <li>Break large documents into smaller, focused chunks</li>
+                    <li>Use clear titles that describe the document content</li>
+                    <li>Rebuild the index after adding multiple documents</li>
+                    <li>Supported file types: TXT, PDF, DOCX, MD</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Document Modal -->
+<div class="modal fade" id="addDocumentModal" tabindex="-1" aria-labelledby="addDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addDocumentModalLabel">Add Document to Knowledge Base</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_document') }}" enctype="multipart/form-data">
+                {{ form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="title" class="form-label">{{ form.title.label }}</label>
+                        {{ form.title(class="form-control", id="title", placeholder="Enter a descriptive title") }}
+                        {% if form.title.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.title.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="content" class="form-label">{{ form.content.label }}</label>
+                        {{ form.content(class="form-control", id="content", rows="8", 
+                                        placeholder="Enter document content directly or upload a file below") }}
+                        <div class="form-text text-muted">
+                            Enter document content directly or upload a file below.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="file" class="form-label">{{ form.file.label }}</label>
+                        {{ form.file(class="form-control", id="file") }}
+                        <div class="form-text text-muted">
+                            Supported file types: TXT, PDF, DOCX, MD
+                        </div>
+                        {% if form.file.errors %}
+                            <div class="invalid-feedback d-block">
+                                {% for error in form.file.errors %}
+                                    {{ error }}
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- View Document Modal -->
+<div class="modal fade" id="viewDocumentModal" tabindex="-1" aria-labelledby="viewDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-info text-white">
+                <h5 class="modal-title" id="viewDocumentModalLabel">Document Contents</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h5 id="documentTitle" class="mb-3"></h5>
+                <div class="border rounded p-3 bg-light">
+                    <pre id="documentContent" class="mb-0" style="white-space: pre-wrap;"></pre>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Document Modal -->
+<div class="modal fade" id="deleteDocumentModal" tabindex="-1" aria-labelledby="deleteDocumentModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteDocumentModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the document "<span id="deleteDocumentTitle"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="" id="deleteDocumentForm">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/knowledge_base.js') }}"></script>
+{% endblock %}

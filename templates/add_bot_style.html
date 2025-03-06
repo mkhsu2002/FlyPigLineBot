@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Add Bot Style{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Add Bot Style</h1>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">New Bot Style</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('add_bot_style') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Style Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                        <div class="form-text">Give your style a unique name</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="prompt" class="form-label">System Prompt</label>
+                        <textarea class="form-control" id="prompt" name="prompt" rows="8" required></textarea>
+                        <div class="form-text">The system prompt that defines this style's behavior</div>
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="is_default" name="is_default">
+                        <label class="form-check-label" for="is_default">Set as Default Style</label>
+                        <div class="form-text">If checked, this style will become the default for all new conversations</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('bot_styles') }}" class="btn btn-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">Save Style</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Preset Templates</h5>
+            </div>
+            <div class="card-body">
+                <p>Choose from these preset templates:</p>
+                <div class="mb-3">
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('conversational')">Conversational</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('professional')">Professional</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('creative')">Creative</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('friendly')">Friendly</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('technical')">Technical</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function loadTemplate(template) {
+    let prompt = '';
+    
+    switch(template) {
+        case 'conversational':
+            prompt = 'You are a conversational assistant that speaks in a casual, friendly manner. Use natural language, contractions, and occasionally emoji. Keep responses concise and engaging, as if chatting with a friend.';
+            break;
+        case 'professional':
+            prompt = 'You are a professional assistant that provides formal, precise responses. Avoid colloquialisms, maintain a respectful tone, and organize information clearly. Be comprehensive but concise, prioritizing accuracy and clarity.';
+            break;
+        case 'creative':
+            prompt = 'You are a creative assistant with a vivid imagination. Use expressive language, varied sentence structures, and occasional metaphors. Be descriptive and think outside the box when responding to questions or requests.';
+            break;
+        case 'friendly':
+            prompt = 'You are a friendly assistant who responds with warmth and enthusiasm. Use a positive tone, supportive language, and show empathy. Make the user feel comfortable and brighten their day with your helpful responses.';
+            break;
+        case 'technical':
+            prompt = 'You are a technical assistant that provides detailed, precise information. Use industry-appropriate terminology, structured explanations, and factual references. Prioritize accuracy and depth in your responses to technical questions.';
+            break;
+        default:
+            return;
+    }
+    
+    document.getElementById('prompt').value = prompt;
+}
+</script>
+{% endblock %}

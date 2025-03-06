@@ -1,0 +1,102 @@
+{% extends 'base.html' %}
+
+{% block title %}Bot Styles{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Bot Styles</h1>
+    <a href="{{ url_for('add_bot_style') }}" class="btn btn-primary">Add New Style</a>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Available Styles</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Style Name</th>
+                                <th>Description</th>
+                                <th>Default</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for style in styles %}
+                            <tr>
+                                <td>{{ style.name }}</td>
+                                <td>{{ style.prompt | truncate(50) }}</td>
+                                <td>
+                                    {% if style.is_default %}
+                                    <span class="badge bg-success">Yes</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">No</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info" 
+                                            data-bs-toggle="modal" data-bs-target="#viewStyleModal"
+                                            data-style-name="{{ style.name }}"
+                                            data-style-prompt="{{ style.prompt }}">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3">No bot styles created yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Style Modal -->
+<div class="modal fade" id="viewStyleModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewStyleTitle">View Style</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <h6>Style Name:</h6>
+                <p id="viewStyleName"></p>
+                
+                <h6>Prompt:</h6>
+                <pre id="viewStylePrompt" class="p-3 bg-dark text-light rounded"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const viewStyleModal = document.getElementById('viewStyleModal');
+    if (viewStyleModal) {
+        viewStyleModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const styleName = button.getAttribute('data-style-name');
+            const stylePrompt = button.getAttribute('data-style-prompt');
+            
+            document.getElementById('viewStyleName').textContent = styleName;
+            document.getElementById('viewStylePrompt').textContent = stylePrompt;
+            document.getElementById('viewStyleTitle').textContent = 'View Style: ' + styleName;
+        });
+    }
+});
+</script>
+{% endblock %}

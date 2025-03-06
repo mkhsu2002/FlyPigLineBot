@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Message History{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Message History</h1>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Chat Messages</h5>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBtn">
+                        <i class="bi bi-arrow-clockwise"></i> Refresh
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>User ID</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                                <th>Style</th>
+                                <th>Timestamp</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for message in messages %}
+                            <tr>
+                                <td>{{ message.user_id[:8] }}...</td>
+                                <td>
+                                    {% if message.is_user_message %}
+                                    <span class="badge bg-primary">User</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Bot</span>
+                                    {% endif %}
+                                </td>
+                                <td class="view-message" data-message="{{ message.message_text }}">
+                                    {{ message.message_text | truncate(50) }}
+                                </td>
+                                <td>{{ message.bot_style or '-' }}</td>
+                                <td>{{ message.timestamp.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>
+                                    <button type="button" class="btn btn-sm btn-outline-info view-message-btn" 
+                                            data-bs-toggle="modal" data-bs-target="#viewMessageModal"
+                                            data-message="{{ message.message_text }}"
+                                            data-user-id="{{ message.user_id }}"
+                                            data-type="{% if message.is_user_message %}User{% else %}Bot{% endif %}"
+                                            data-timestamp="{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}">
+                                        View
+                                    </button>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="6" class="text-center py-3">No messages yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Message Modal -->
+<div class="modal fade" id="viewMessageModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">View Message</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <strong>User ID:</strong> <span id="modalUserId"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>Type:</strong> <span id="modalType"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>Timestamp:</strong> <span id="modalTimestamp"></span>
+                </div>
+                <div class="mb-3">
+                    <strong>Message:</strong>
+                    <div id="messageContent" class="p-3 bg-dark text-light rounded"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Handle message view modal
+    const viewMessageModal = document.getElementById('viewMessageModal');
+    if (viewMessageModal) {
+        viewMessageModal.addEventListener('show.bs.modal', function(event) {
+            const button = event.relatedTarget;
+            const message = button.getAttribute('data-message');
+            const userId = button.getAttribute('data-user-id');
+            const type = button.getAttribute('data-type');
+            const timestamp = button.getAttribute('data-timestamp');
+            
+            document.getElementById('modalUserId').textContent = userId;
+            document.getElementById('modalType').textContent = type;
+            document.getElementById('modalTimestamp').textContent = timestamp;
+            document.getElementById('messageContent').textContent = message;
+        });
+    }
+    
+    // Handle refresh button
+    const refreshBtn = document.getElementById('refreshBtn');
+    if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+            location.reload();
+        });
+    }
+});
+</script>
+{% endblock %}

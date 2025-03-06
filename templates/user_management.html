@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - FlyPig LINE Bot Admin{% endblock %}
+
+{% block content %}
+<h1 class="mb-4"><i class="fas fa-users-cog me-2"></i>User Management</h1>
+
+<div class="row">
+    <div class="col-lg-8">
+        <!-- User List -->
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Admin Panel Users</h5>
+                <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                    <i class="fas fa-plus me-1"></i> Add User
+                </button>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Username</th>
+                                <th>Email</th>
+                                <th>Role</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge bg-{{ 'danger' if user.is_admin else 'secondary' }}">
+                                        {{ 'Admin' if user.is_admin else 'User' }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <button type="button" class="btn btn-outline-primary edit-user" 
+                                                data-id="{{ user.id }}" data-bs-toggle="modal" data-bs-target="#editUserModal">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger delete-user"
+                                                data-id="{{ user.id }}" data-name="{{ user.username }}" 
+                                                data-bs-toggle="modal" data-bs-target="#deleteUserModal"
+                                                {% if user.id == current_user.id %}disabled{% endif %}>
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% else %}
+                            <tr>
+                                <td colspan="4" class="text-center">No users defined yet</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-4">
+        <div class="card shadow-sm mb-4">
+            <div class="card-header bg-info text-white">
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>About Users</h5>
+            </div>
+            <div class="card-body">
+                <p>Users listed here can log in to the admin panel to manage the LINE bot.</p>
+                <p>There are two types of users:</p>
+                <ul>
+                    <li><strong>Admin:</strong> Has full access to all features, including user management</li>
+                    <li><strong>User:</strong> Can access most features but cannot manage other users</li>
+                </ul>
+                <p>At least one admin user must always exist in the system.</p>
+            </div>
+        </div>
+        
+        <div class="card shadow-sm">
+            <div class="card-header bg-warning">
+                <h5 class="card-title mb-0"><i class="fas fa-shield-alt me-2"></i>Security Tips</h5>
+            </div>
+            <div class="card-body">
+                <ul>
+                    <li>Use strong, unique passwords for each user</li>
+                    <li>Grant admin privileges only when necessary</li>
+                    <li>Regularly review user accounts</li>
+                    <li>Remove user accounts that are no longer needed</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.add_user') }}">
+                {{ form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username(class="form-control", id="username", placeholder="Enter username") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="email" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email(class="form-control", id="email", placeholder="Enter email") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control", id="password", placeholder="Enter password") }}
+                        <div class="form-text text-muted">
+                            Password is required for new users.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="password_confirm" class="form-label">{{ form.password_confirm.label }}</label>
+                        {{ form.password_confirm(class="form-control", id="password_confirm", placeholder="Confirm password") }}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.is_admin(class="form-check-input", id="is_admin") }}
+                        <label class="form-check-label" for="is_admin">{{ form.is_admin.label }}</label>
+                        <div class="form-text text-muted">
+                            Admins can manage users and access all features.
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="" id="editUserForm">
+                {{ form.hidden_tag() }}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="edit_username" class="form-label">{{ form.username.label }}</label>
+                        {{ form.username(class="form-control", id="edit_username") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_email" class="form-label">{{ form.email.label }}</label>
+                        {{ form.email(class="form-control", id="edit_email") }}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_password" class="form-label">{{ form.password.label }}</label>
+                        {{ form.password(class="form-control", id="edit_password", placeholder="Leave blank to keep current password") }}
+                        <div class="form-text text-muted">
+                            Leave blank to keep the current password.
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="edit_password_confirm" class="form-label">{{ form.password_confirm.label }}</label>
+                        {{ form.password_confirm(class="form-control", id="edit_password_confirm") }}
+                    </div>
+                    
+                    <div class="mb-3 form-check">
+                        {{ form.is_admin(class="form-check-input", id="edit_is_admin") }}
+                        <label class="form-check-label" for="edit_is_admin">{{ form.is_admin.label }}</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    {{ form.submit(class="btn btn-primary") }}
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal" tabindex="-1" aria-labelledby="deleteUserModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="deleteUserModalLabel">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the user "<span id="deleteUserName"></span>"?</p>
+                <p class="text-danger">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form method="POST" action="" id="deleteUserForm">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Edit user functionality
+        const editButtons = document.querySelectorAll('.edit-user');
+        const editForm = document.getElementById('editUserForm');
+        
+        editButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                editForm.action = "{{ url_for('admin.user_management') }}/edit/" + userId;
+                
+                // Fetch user data and populate form
+                fetch("{{ url_for('admin.user_management') }}/get/" + userId)
+                    .then(response => response.json())
+                    .then(user => {
+                        document.getElementById('edit_username').value = user.username;
+                        document.getElementById('edit_email').value = user.email;
+                        document.getElementById('edit_password').value = '';
+                        document.getElementById('edit_password_confirm').value = '';
+                        document.getElementById('edit_is_admin').checked = user.is_admin;
+                    });
+            });
+        });
+        
+        // Delete user functionality
+        const deleteButtons = document.querySelectorAll('.delete-user');
+        const deleteForm = document.getElementById('deleteUserForm');
+        const deleteUserName = document.getElementById('deleteUserName');
+        
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.getAttribute('data-id');
+                const username = this.getAttribute('data-name');
+                
+                deleteForm.action = "{{ url_for('admin.user_management') }}/delete/" + userId;
+                deleteUserName.textContent = username;
+            });
+        });
+    });
+</script>
+{% endblock %}

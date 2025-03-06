@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Bot Settings{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">LINE Bot Settings</h1>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Bot Configuration</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('bot_settings') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="channel_id" class="form-label">Channel ID</label>
+                        <input type="text" class="form-control" id="channel_id" name="channel_id" value="{{ config.channel_id }}" required>
+                        <div class="form-text">Your LINE Messaging API channel ID</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="channel_secret" class="form-label">Channel Secret</label>
+                        <input type="text" class="form-control" id="channel_secret" name="channel_secret" value="{{ config.channel_secret }}" required>
+                        <div class="form-text">Your LINE Messaging API channel secret</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="channel_access_token" class="form-label">Channel Access Token</label>
+                        <input type="text" class="form-control" id="channel_access_token" name="channel_access_token" value="{{ config.channel_access_token }}" required>
+                        <div class="form-text">Your LINE Messaging API channel access token</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="active_style" class="form-label">Active Bot Style</label>
+                        <select class="form-select" id="active_style" name="active_style" required>
+                            {% for style in styles %}
+                            <option value="{{ style.name }}" {% if style.name == active_style %}selected{% endif %}>
+                                {{ style.name }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <div class="form-text">The default response style for your bot</div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="submit" class="btn btn-primary">Save Settings</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card bg-dark">
+            <div class="card-header">
+                <h5 class="mb-0">Webhook URL</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">Use the following URL in your LINE Developers Console:</p>
+                <div class="input-group mb-3">
+                    <input type="text" class="form-control" id="webhookUrl" value="{{ request.host_url }}webhook" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="copyWebhook" onclick="copyWebhookUrl()">Copy</button>
+                </div>
+                <p class="small text-muted mb-0">This is the URL that LINE will use to send messages to your bot.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function copyWebhookUrl() {
+    var copyText = document.getElementById("webhookUrl");
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    var copyBtn = document.getElementById("copyWebhook");
+    copyBtn.innerHTML = "Copied!";
+    setTimeout(function() {
+        copyBtn.innerHTML = "Copy";
+    }, 2000);
+}
+</script>
+{% endblock %}
