@@ -366,7 +366,7 @@ def add_bot_style():
             ConfigManager.set("ACTIVE_BOT_STYLE", name)
         
         db.session.commit()
-        flash('Bot style added successfully', 'success')
+        flash('機器人風格已成功新增', 'success')
         return redirect(url_for('bot_styles'))
     
     return render_template('add_bot_style.html')
