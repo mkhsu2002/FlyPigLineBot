@@ -105,3 +105,14 @@ def is_rag_enabled():
     if rag_enabled is None:
         return True
     return rag_enabled.lower() == "true"
+
+# Helper function to check if web search is enabled
+def is_web_search_enabled():
+    web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False")
+    if web_search_enabled is None:
+        return False
+    return web_search_enabled.lower() == "true"
+
+# Helper function to get the SerpAPI key
+def get_serpapi_key():
+    return ConfigManager.get("SERPAPI_KEY", "")

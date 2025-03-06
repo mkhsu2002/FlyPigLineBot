@@ -4,23 +4,19 @@ import json
 import re
 from urllib.parse import quote
 from services.llm_service import LLMService
-from routes.utils.config_service import ConfigManager
+from config import is_web_search_enabled, get_serpapi_key
 
 logger = logging.getLogger(__name__)
 
 class WebSearchService:
     """Service for web search and information retrieval"""
     
-    @staticmethod
-    def is_web_search_enabled():
-        """Check if web search is enabled"""
-        web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False")
-        return web_search_enabled.lower() == "true"
+    # Method removed as we're now using the imported is_web_search_enabled function
     
     @staticmethod
     def search_google(query, num_results=3):
         """Search Google for information on a topic"""
-        if not WebSearchService.is_web_search_enabled():
+        if not is_web_search_enabled():
             logger.info("Web search is disabled")
             return None
             
@@ -29,7 +25,7 @@ class WebSearchService:
             search_query = quote(query)
             
             # Using SerpAPI-compatible endpoint
-            api_key = ConfigManager.get("SERPAPI_KEY", "")
+            api_key = get_serpapi_key()
             if not api_key:
                 logger.error("SERPAPI_KEY not configured")
                 return None
@@ -99,7 +95,7 @@ class WebSearchService:
     @staticmethod
     def get_search_results_for_query(query):
         """Search the web for information about a query"""
-        if not WebSearchService.is_web_search_enabled():
+        if not is_web_search_enabled():
             return None
             
         # Search Google
@@ -126,7 +122,7 @@ class WebSearchService:
     @staticmethod
     def answer_with_web_search(query):
         """Search the web and generate a response using the search results"""
-        if not WebSearchService.is_web_search_enabled():
+        if not is_web_search_enabled():
             return None
             
         # Get search results

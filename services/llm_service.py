@@ -48,14 +48,18 @@ class LLMService:
         return style
     
     @staticmethod
-    def generate_response(user_message, style_name=None, rag_context=None):
-        """Generate a response using the OpenAI API with the specified style"""
+    def generate_response(user_message, style_name=None, rag_context=None, system_prompt=None):
+        """Generate a response using the OpenAI API with the specified style
+        
+        Args:
+            user_message (str): The user's message to respond to
+            style_name (str, optional): The name of the bot style to use. Defaults to None.
+            rag_context (str, optional): Additional context from RAG. Defaults to None.
+            system_prompt (str, optional): Custom system prompt that overrides the style. Defaults to None.
+        """
         client = LLMService.get_client()
         if not client:
             return "抱歉，無法連接 AI 服務，請檢查 API 設定。"
-        
-        # Get the bot style
-        style = LLMService.get_bot_style(style_name)
         
         # Get OpenAI settings
         settings = get_llm_settings()
@@ -64,9 +68,18 @@ class LLMService:
         taiwan_tz = timezone(timedelta(hours=8))
         current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
         
+        # Determine the system prompt
+        if system_prompt:
+            # Use the provided custom system prompt
+            prompt_content = f"{system_prompt} 真實即時日期是 {current_date}。"
+        else:
+            # Get the bot style
+            style = LLMService.get_bot_style(style_name)
+            prompt_content = f"{style.prompt} 真實即時日期是 {current_date}。"
+        
         # Build the messages with date information
         messages = [
-            {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"}
+            {"role": "system", "content": prompt_content}
         ]
         
         # Add RAG context if available

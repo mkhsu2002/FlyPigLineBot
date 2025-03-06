@@ -119,15 +119,35 @@ def handle_text_message(event):
         )
         return
     
-    # Get RAG context if enabled
-    rag_context = RAGService.get_context_for_query(user_message)
-    
-    # Use the user's preferred style if set
-    if line_user.active_style:
-        bot_style = line_user.active_style
-    
-    # Generate response using OpenAI
-    response_text = LLMService.generate_response(user_message, bot_style, rag_context)
+    # Check for search command
+    if user_message.startswith('/搜尋 ') or user_message.startswith('/search '):
+        # Extract the search query
+        if user_message.startswith('/搜尋 '):
+            search_query = user_message[4:].strip()
+        else:
+            search_query = user_message[8:].strip()
+            
+        if not search_query:
+            response_text = "請提供搜尋關鍵詞，例如：/搜尋 台北天氣"
+        else:
+            logger.info(f"Web search requested: {search_query}")
+            # Use web search service
+            search_response = WebSearchService.answer_with_web_search(search_query)
+            if search_response:
+                response_text = search_response
+            else:
+                response_text = "很抱歉，搜尋功能暫時無法使用或未找到相關資訊。"
+    else:
+        # Regular message processing
+        # Get RAG context if enabled
+        rag_context = RAGService.get_context_for_query(user_message)
+        
+        # Use the user's preferred style if set
+        if line_user.active_style:
+            bot_style = line_user.active_style
+        
+        # Generate response using OpenAI
+        response_text = LLMService.generate_response(user_message, bot_style, rag_context)
     
     # Save bot response to database
     bot_message = ChatMessage(
