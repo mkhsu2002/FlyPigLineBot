@@ -90,7 +90,7 @@ def get_line_config():
 
 # Helper function to get the active bot style
 def get_active_bot_style():
-    return ConfigManager.get("ACTIVE_BOT_STYLE", "Default")
+    return ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
 
 # Helper function to get LLM settings
 def get_llm_settings():
