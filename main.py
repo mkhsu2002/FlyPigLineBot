@@ -316,11 +316,25 @@ def dashboard():
     # Get recent messages
     recent_messages = ChatMessage.query.order_by(ChatMessage.timestamp.desc()).limit(10).all()
     
+    # Get active style
+    active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "")
+    
+    # Check API status
+    api_status = LLMService.validate_api_key(ConfigManager.get("OPENAI_API_KEY", ""))
+    
+    # Check feature status
+    rag_enabled = ConfigManager.get("RAG_ENABLED", "False") == "True"
+    web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
+    
     return render_template('dashboard.html', 
                            total_messages=total_messages,
                            user_messages=user_messages, 
                            bot_messages=bot_messages,
-                           recent_messages=recent_messages)
+                           recent_messages=recent_messages,
+                           active_style=active_style,
+                           api_status=api_status,
+                           rag_enabled=rag_enabled,
+                           web_search_enabled=web_search_enabled)
 
 @app.route('/bot-settings', methods=['GET', 'POST'])
 @login_required
