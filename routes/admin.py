@@ -5,7 +5,7 @@ from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from models import BotStyle, Config, ChatMessage, Document, LineUser, User
 from app import db
-from forms import LLMSettingsForm, BotStyleForm, BotSettingsForm, DocumentForm, UserForm
+from forms import LLMSettingsForm, BotStyleForm, BotSettingsForm, DocumentForm, UserForm, BulkUploadForm
 from routes.utils.config_service import ConfigManager
 from services.llm_service import LLMService
 from rag_service import RAGService
@@ -327,21 +327,91 @@ def add_document():
         
         # Ensure we have content
         if not content:
-            flash('Document must have content either from text field or file.', 'danger')
+            flash('文件必須包含內容，可以從文字欄位或上傳檔案獲取', 'danger')
             return redirect(url_for('admin.knowledge_base'))
         
         # Add document
         success, result = RAGService.add_document(title, content, filename)
         
         if success:
-            flash(f'Document "{title}" added successfully.', 'success')
+            flash(f'文件 "{title}" 添加成功', 'success')
         else:
-            flash(f'Error adding document: {result}', 'danger')
+            flash(f'添加文件錯誤: {result}', 'danger')
     else:
         for field, errors in form.errors.items():
             for error in errors:
                 flash(f'{field}: {error}', 'danger')
     
+    return redirect(url_for('admin.knowledge_base'))
+    
+@admin_bp.route('/knowledge_base/bulk_upload', methods=['POST'])
+@admin_required
+def bulk_upload():
+    """Bulk upload multiple documents to the knowledge base"""
+    if 'files' not in request.files:
+        flash('未選擇任何檔案', 'danger')
+        return redirect(url_for('admin.knowledge_base'))
+        
+    files = request.files.getlist('files')
+    
+    if not files or files[0].filename == '':
+        flash('未選擇任何檔案', 'danger')
+        return redirect(url_for('admin.knowledge_base'))
+    
+    title_prefix = request.form.get('title_prefix', '')
+    
+    # Allowed file extensions
+    allowed_extensions = ['txt', 'pdf', 'docx', 'md']
+    
+    success_count = 0
+    error_count = 0
+    
+    for file in files:
+        # Check if file extension is allowed
+        if '.' not in file.filename or file.filename.rsplit('.', 1)[1].lower() not in allowed_extensions:
+            flash(f'不支援的檔案格式: {file.filename}', 'warning')
+            error_count += 1
+            continue
+            
+        try:
+            # Create a title from the filename (without extension)
+            raw_title = file.filename.rsplit('.', 1)[0]
+            # Format title: replace underscore and dash with space, capitalize words
+            formatted_title = ' '.join(word.capitalize() for word in raw_title.replace('_', ' ').replace('-', ' ').split())
+            title = f"{title_prefix}{formatted_title}" if title_prefix else formatted_title
+            
+            # Read file content
+            content = file.read().decode('utf-8', errors='replace')
+            
+            if not content.strip():
+                flash(f'檔案 {file.filename} 是空的', 'warning')
+                error_count += 1
+                continue
+                
+            # Add to database
+            success, result = RAGService.add_document(title, content, file.filename)
+            
+            if success:
+                success_count += 1
+            else:
+                flash(f'添加文件 {file.filename} 錯誤: {result}', 'danger')
+                error_count += 1
+                
+        except Exception as e:
+            flash(f'處理檔案 {file.filename} 時發生錯誤: {str(e)}', 'danger')
+            error_count += 1
+    
+    # Show summary
+    if success_count > 0:
+        flash(f'成功上傳 {success_count} 個文件到知識庫', 'success')
+        
+    if error_count > 0:
+        flash(f'{error_count} 個文件處理失敗', 'warning')
+    
+    # Rebuild index if any document was added successfully
+    if success_count > 0:
+        RAGService.update_index()
+        
     return redirect(url_for('admin.knowledge_base'))
 
 @admin_bp.route('/knowledge_base/delete/<int:doc_id>', methods=['POST'])

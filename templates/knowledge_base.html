@@ -77,32 +77,32 @@
     <div class="col-lg-4">
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-info text-white">
-                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>About RAG</h5>
+                <h5 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>關於RAG技術</h5>
             </div>
             <div class="card-body">
-                <p>Retrieval Augmented Generation (RAG) enhances your bot's responses by referencing your knowledge base.</p>
-                <p>When a user asks a question, the system:</p>
+                <p>檢索增強生成 (RAG) 透過參考您的知識庫來提升機器人的回應品質。</p>
+                <p>當用戶提出問題時，系統會：</p>
                 <ol>
-                    <li>Searches the knowledge base for relevant information</li>
-                    <li>Retrieves the most similar documents</li>
-                    <li>Provides this context to the AI model</li>
-                    <li>Generates a response informed by your custom data</li>
+                    <li>在知識庫中搜尋相關信息</li>
+                    <li>檢索最相似的文檔</li>
+                    <li>將這些上下文提供給AI模型</li>
+                    <li>產生基於您自定義數據的回應</li>
                 </ol>
-                <p>This allows your bot to answer questions about specific topics with accurate, up-to-date information from your documents.</p>
+                <p>這使您的機器人能夠使用來自您文檔的準確、最新信息回答有關特定主題的問題。</p>
             </div>
         </div>
         
         <div class="card shadow-sm">
             <div class="card-header bg-warning">
-                <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>Document Tips</h5>
+                <h5 class="card-title mb-0"><i class="fas fa-lightbulb me-2"></i>文件提示</h5>
             </div>
             <div class="card-body">
                 <ul>
-                    <li>Add factual, relevant content to your knowledge base</li>
-                    <li>Break large documents into smaller, focused chunks</li>
-                    <li>Use clear titles that describe the document content</li>
-                    <li>Rebuild the index after adding multiple documents</li>
-                    <li>Supported file types: TXT, PDF, DOCX, MD</li>
+                    <li>添加與事實相關的內容到知識庫</li>
+                    <li>將大型文件拆分成較小的專注片段</li>
+                    <li>使用清晰的標題描述文件內容</li>
+                    <li>添加多個文件後重建索引</li>
+                    <li>支援的檔案類型：TXT, PDF, DOCX, MD</li>
                 </ul>
             </div>
         </div>
@@ -114,7 +114,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title" id="addDocumentModalLabel">Add Document to Knowledge Base</h5>
+                <h5 class="modal-title" id="addDocumentModalLabel">添加文件到知識庫</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="POST" action="{{ url_for('admin.add_document') }}" enctype="multipart/form-data">
@@ -122,7 +122,7 @@
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="title" class="form-label">{{ form.title.label }}</label>
-                        {{ form.title(class="form-control", id="title", placeholder="Enter a descriptive title") }}
+                        {{ form.title(class="form-control", id="title", placeholder="輸入描述性標題") }}
                         {% if form.title.errors %}
                             <div class="invalid-feedback d-block">
                                 {% for error in form.title.errors %}
@@ -135,9 +135,9 @@
                     <div class="mb-3">
                         <label for="content" class="form-label">{{ form.content.label }}</label>
                         {{ form.content(class="form-control", id="content", rows="8", 
-                                        placeholder="Enter document content directly or upload a file below") }}
+                                        placeholder="直接輸入文件內容或上傳檔案") }}
                         <div class="form-text text-muted">
-                            Enter document content directly or upload a file below.
+                            直接輸入文件內容或上傳檔案。
                         </div>
                     </div>
                     
@@ -145,7 +145,7 @@
                         <label for="file" class="form-label">{{ form.file.label }}</label>
                         {{ form.file(class="form-control", id="file") }}
                         <div class="form-text text-muted">
-                            Supported file types: TXT, PDF, DOCX, MD
+                            支援的檔案類型：TXT, PDF, DOCX, MD
                         </div>
                         {% if form.file.errors %}
                             <div class="invalid-feedback d-block">
@@ -157,7 +157,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                     {{ form.submit(class="btn btn-primary") }}
                 </div>
             </form>
@@ -170,7 +170,7 @@
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header bg-info text-white">
-                <h5 class="modal-title" id="viewDocumentModalLabel">Document Contents</h5>
+                <h5 class="modal-title" id="viewDocumentModalLabel">文件內容</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
@@ -180,9 +180,9 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
                 <a id="downloadDocumentBtn" href="#" class="btn btn-success">
-                    <i class="fas fa-download me-1"></i> Download
+                    <i class="fas fa-download me-1"></i> 下載
                 </a>
             </div>
         </div>
