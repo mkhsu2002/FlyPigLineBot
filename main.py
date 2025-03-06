@@ -213,9 +213,9 @@ with app.app_context():
         
         # Create default bot styles
         default_styles = [
-            BotStyle(name="預設", prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。", is_default=True),
+            BotStyle(name="貼心", prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。", is_default=True),
             BotStyle(name="風趣", prompt="你是一位風趣幽默的阿昌，擅長用輕鬆詼諧的語調回答問題，回應中帶有俏皮的繁體中文表達方式，但不失專業與幫助性。"),
-            BotStyle(name="正式", prompt="你是阿昌，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議。"),
+            BotStyle(name="認真", prompt="你是阿昌，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議。"),
             BotStyle(name="專業", prompt="你是阿昌，一位技術專家助理，提供詳細、專業的繁體中文回應，使用特定的技術術語和全面的解釋，讓用戶對技術問題有更深入的理解。"),
         ]
         for style in default_styles:
@@ -228,7 +228,7 @@ with app.app_context():
             Config(key="LINE_CHANNEL_ID", value=""),
             Config(key="LINE_CHANNEL_SECRET", value=""),
             Config(key="LINE_CHANNEL_ACCESS_TOKEN", value=""),
-            Config(key="ACTIVE_BOT_STYLE", value="預設"),
+            Config(key="ACTIVE_BOT_STYLE", value="貼心"),
         ]
         for config in default_configs:
             db.session.add(config)
@@ -304,7 +304,7 @@ def bot_settings():
         return redirect(url_for('bot_settings'))
     
     config = get_line_config()
-    active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "預設")
+    active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
     styles = BotStyle.query.all()
     
     return render_template('bot_settings.html', 
