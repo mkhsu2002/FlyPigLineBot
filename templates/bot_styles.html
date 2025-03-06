@@ -44,6 +44,9 @@
                                             data-style-prompt="{{ style.prompt }}">
                                         查看
                                     </button>
+                                    <a href="{{ url_for('edit_bot_style', style_id=style.id) }}" class="btn btn-sm btn-outline-primary">
+                                        編輯
+                                    </a>
                                 </td>
                             </tr>
                             {% else %}

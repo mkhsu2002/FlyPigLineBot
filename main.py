@@ -212,10 +212,10 @@ with app.app_context():
         
         # Create default bot styles
         default_styles = [
-            BotStyle(name="預設", prompt="你是一位有幫助的助手。請用繁體中文回答，以直接明瞭的方式回應。", is_default=True),
-            BotStyle(name="幽默", prompt="你是一位風趣的助手。請用繁體中文回答，在回應中加入幽默元素。"),
-            BotStyle(name="正式", prompt="你是一位正式專業的助手。請用繁體中文回答，使用適當的語言並避免口語化表達。"),
-            BotStyle(name="技術", prompt="你是一位技術專家助手。請用繁體中文回答，使用專業術語，提供詳細解釋，並優先考慮準確性。"),
+            BotStyle(name="預設", prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。", is_default=True),
+            BotStyle(name="風趣", prompt="你是一位風趣幽默的阿昌，擅長用輕鬆詼諧的語調回答問題，回應中帶有俏皮的繁體中文表達方式，但不失專業與幫助性。"),
+            BotStyle(name="正式", prompt="你是阿昌，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議。"),
+            BotStyle(name="專業", prompt="你是阿昌，一位技術專家助理，提供詳細、專業的繁體中文回應，使用特定的技術術語和全面的解釋，讓用戶對技術問題有更深入的理解。"),
         ]
         for style in default_styles:
             db.session.add(style)
@@ -339,6 +339,42 @@ def llm_settings():
 def bot_styles():
     styles = BotStyle.query.all()
     return render_template('bot_styles.html', styles=styles)
+
+@app.route('/edit-bot-style/<int:style_id>', methods=['GET', 'POST'])
+@login_required
+def edit_bot_style(style_id):
+    # Get the style by ID
+    style = BotStyle.query.get_or_404(style_id)
+    
+    if request.method == 'POST':
+        name = request.form.get('name')
+        prompt = request.form.get('prompt')
+        is_default = 'is_default' in request.form
+        
+        # Check if another style with this name already exists (exclude current style)
+        existing_style = BotStyle.query.filter(BotStyle.name == name, BotStyle.id != style_id).first()
+        if existing_style:
+            flash(f'名稱為 "{name}" 的風格已存在', 'danger')
+            return redirect(url_for('edit_bot_style', style_id=style_id))
+        
+        # Update the style
+        style.name = name
+        style.prompt = prompt
+        style.is_default = is_default
+        
+        # If this is set as default, update all others
+        if is_default:
+            for other_style in BotStyle.query.filter(BotStyle.id != style_id).all():
+                other_style.is_default = False
+            
+            # Update active style
+            ConfigManager.set("ACTIVE_BOT_STYLE", name)
+        
+        db.session.commit()
+        flash('機器人風格已成功更新', 'success')
+        return redirect(url_for('bot_styles'))
+    
+    return render_template('edit_bot_style.html', style=style)
 
 @app.route('/add-bot-style', methods=['GET', 'POST'])
 @login_required

@@ -50,11 +50,11 @@
             <div class="card-body">
                 <p>從這些預設模板中選擇：</p>
                 <div class="mb-3">
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('conversational')">對話式</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('professional')">專業型</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('creative')">創意型</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('friendly')">友善型</button>
-                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('technical')">技術型</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('conversational')">預設</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('creative')">風趣</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('professional')">正式</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('technical')">專業</button>
+                    <button type="button" class="btn btn-outline-secondary template-btn" onclick="loadTemplate('friendly')">友善</button>
                 </div>
             </div>
         </div>
@@ -69,19 +69,19 @@ function loadTemplate(template) {
     
     switch(template) {
         case 'conversational':
-            prompt = '你是一個以輕鬆友好的方式交談的助手。使用自然語言，口語化表達，偶爾使用表情符號。保持回應簡潔有趣，就像與朋友聊天一樣。請用繁體中文回答。';
+            prompt = '你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。';
             break;
         case 'professional':
-            prompt = '你是一個提供正式、精確回應的專業助手。避免使用口語化表達，保持尊重的語調，並清晰地組織信息。回答要全面但簡潔，優先考慮準確性和清晰度。請用繁體中文回答。';
+            prompt = '你是阿昌，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議。';
             break;
         case 'creative':
-            prompt = '你是一個具有豐富想像力的創意助手。使用生動的語言，多變的句式結構，偶爾使用比喻。在回應問題或請求時要有描述性，跳脫框架思考。請用繁體中文回答。';
+            prompt = '你是一位風趣幽默的阿昌，擅長用輕鬆詼諧的語調回答問題，回應中帶有俏皮的繁體中文表達方式，但不失專業與幫助性。';
             break;
         case 'friendly':
-            prompt = '你是一個以熱情和溫暖回應的友善助手。使用積極的語調，支持性的語言，並表現出同理心。使用戶感到舒適，並用你的有用回應讓他們的一天更美好。請用繁體中文回答。';
+            prompt = '你是阿昌，和宸清潔庇護工場的友善代言人，用熱情和溫暖的繁體中文回應，使用積極的語調和支持性的語言。讓用戶感到舒適，用你的回應帶給他們正能量。';
             break;
         case 'technical':
-            prompt = '你是一個提供詳細、精確信息的技術助手。使用適合行業的術語，結構化的解釋和事實性參考。在回答技術問題時優先考慮準確性和深度。請用繁體中文回答。';
+            prompt = '你是阿昌，一位技術專家助理，提供詳細、專業的繁體中文回應，使用特定的技術術語和全面的解釋，讓用戶對技術問題有更深入的理解。';
             break;
         default:
             return;
