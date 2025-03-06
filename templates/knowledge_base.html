@@ -1,23 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Knowledge Base - FlyPig LINE Bot Admin{% endblock %}
+{% block title %}知識庫管理 - FlyPig LINE Bot Admin{% endblock %}
 
 {% block content %}
-<h1 class="mb-4"><i class="fas fa-book me-2"></i>Knowledge Base</h1>
+<h1 class="mb-4"><i class="fas fa-book me-2"></i>知識庫管理</h1>
 
 <div class="row">
     <div class="col-lg-8">
         <!-- Document List -->
         <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                <h5 class="card-title mb-0">Knowledge Base Documents</h5>
+                <h5 class="card-title mb-0">知識庫文件列表</h5>
                 <div>
                     <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#addDocumentModal">
-                        <i class="fas fa-plus me-1"></i> Add Document
+                        <i class="fas fa-plus me-1"></i> 添加文件
                     </button>
+                    <button type="button" class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#bulkUploadModal">
+                        <i class="fas fa-upload me-1"></i> 批量上傳
+                    </button>
+                    <a href="{{ url_for('admin.export_knowledge_base') }}" class="btn btn-sm btn-light">
+                        <i class="fas fa-download me-1"></i> 匯出所有
+                    </a>
                     <form method="POST" action="{{ url_for('admin.rebuild_index') }}" class="d-inline">
                         <button type="submit" class="btn btn-sm btn-light">
-                            <i class="fas fa-sync me-1"></i> Rebuild Index
+                            <i class="fas fa-sync me-1"></i> 重建索引
                         </button>
                     </form>
                 </div>
@@ -27,17 +33,17 @@
                     <table class="table table-hover mb-0">
                         <thead class="table-dark">
                             <tr>
-                                <th>Title</th>
-                                <th>Source</th>
-                                <th>Uploaded</th>
-                                <th>Actions</th>
+                                <th>標題</th>
+                                <th>來源</th>
+                                <th>上傳日期</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for doc in documents %}
                             <tr>
                                 <td>{{ doc.title }}</td>
-                                <td>{{ doc.filename if doc.filename else 'Direct Input' }}</td>
+                                <td>{{ doc.filename if doc.filename else '直接輸入' }}</td>
                                 <td>{{ doc.uploaded_at.strftime('%Y-%m-%d') }}</td>
                                 <td>
                                     <div class="btn-group btn-group-sm">
@@ -58,7 +64,7 @@
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="4" class="text-center">No documents in the knowledge base</td>
+                                <td colspan="4" class="text-center">知識庫中尚無文件</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -188,19 +194,62 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="deleteDocumentModalLabel">Confirm Deletion</h5>
+                <h5 class="modal-title" id="deleteDocumentModalLabel">確認刪除</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <p>Are you sure you want to delete the document "<span id="deleteDocumentTitle"></span>"?</p>
-                <p class="text-danger">This action cannot be undone.</p>
+                <p>您確定要刪除文件 "<span id="deleteDocumentTitle"></span>"？</p>
+                <p class="text-danger">此操作無法撤銷。</p>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
                 <form method="POST" action="" id="deleteDocumentForm">
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                    <button type="submit" class="btn btn-danger">刪除</button>
                 </form>
             </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bulk Upload Modal -->
+<div class="modal fade" id="bulkUploadModal" tabindex="-1" aria-labelledby="bulkUploadModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="bulkUploadModalLabel">批量上傳文件</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('admin.bulk_upload') }}" enctype="multipart/form-data">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="files" class="form-label">選擇多個檔案</label>
+                        <input type="file" class="form-control" id="files" name="files" multiple required>
+                        <div class="form-text text-muted">
+                            支援格式：TXT, PDF, DOCX, MD。按住 Ctrl 或 Shift 選擇多個檔案。
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="title_prefix" class="form-label">標題前綴 (可選)</label>
+                        <input type="text" class="form-control" id="title_prefix" name="title_prefix" 
+                               placeholder="例如：'公司資料 - '，將加在檔案名之前">
+                        <div class="form-text text-muted">
+                            添加到每個檔案名之前的文字，幫助組織您的知識庫
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        上傳後，系統將自動處理文件內容並更新知識庫索引。
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload me-1"></i> 開始上傳
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

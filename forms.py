@@ -61,10 +61,20 @@ class BotSettingsForm(FlaskForm):
 
 class DocumentForm(FlaskForm):
     """Form for adding documents to the knowledge base"""
-    title = StringField('Document Title', validators=[DataRequired()])
-    content = TextAreaField('Document Content', validators=[Optional()])
-    file = FileField('Upload File', validators=[
+    title = StringField('文件標題', validators=[DataRequired()])
+    content = TextAreaField('文件內容', validators=[Optional()])
+    file = FileField('上傳檔案', validators=[
         Optional(),
-        FileAllowed(['txt', 'pdf', 'docx', 'md'], 'Text documents only!')
+        FileAllowed(['txt', 'pdf', 'docx', 'md'], '僅支援文字文件！')
     ])
-    submit = SubmitField('Add Document')
+    submit = SubmitField('添加文件')
+    
+class BulkUploadForm(FlaskForm):
+    """Form for bulk uploading documents to the knowledge base"""
+    files = FileField('選擇多個檔案', validators=[
+        DataRequired(),
+        FileAllowed(['txt', 'pdf', 'docx', 'md'], '僅支援文字文件！')
+    ])
+    title_prefix = StringField('標題前綴', validators=[Optional()], 
+                              description='可選的標題前綴，將加在每個檔案名之前')
+    submit = SubmitField('批量上傳')
