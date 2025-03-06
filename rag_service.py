@@ -187,6 +187,28 @@ class RAGService:
             logger.error(f"Error adding document: {e}")
             db.session.rollback()
             return False, str(e)
+            
+    @staticmethod
+    def export_knowledge_base():
+        """Export all knowledge base documents as a downloadable file"""
+        try:
+            documents = Document.query.all()
+            
+            # Create a formatted text file with all documents
+            export_content = "# FlyPig 知識庫匯出\n\n"
+            
+            for i, doc in enumerate(documents, 1):
+                export_content += f"## {i}. {doc.title}\n"
+                if doc.filename:
+                    export_content += f"來源: {doc.filename}\n"
+                export_content += f"上傳時間: {doc.uploaded_at.strftime('%Y-%m-%d %H:%M:%S')}\n\n"
+                export_content += f"{doc.content}\n\n"
+                export_content += "---\n\n"
+            
+            return export_content
+        except Exception as e:
+            logger.error(f"Error exporting knowledge base: {e}")
+            return None
     
     @staticmethod
     def delete_document(doc_id):

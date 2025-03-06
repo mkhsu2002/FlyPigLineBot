@@ -398,6 +398,28 @@ def rebuild_index():
     
     return redirect(url_for('admin.knowledge_base'))
 
+@admin_bp.route('/knowledge_base/export')
+@admin_required
+def export_knowledge_base():
+    """Export all knowledge base documents as a downloadable file"""
+    from flask import Response
+    
+    # Get exported content
+    content = RAGService.export_knowledge_base()
+    
+    if not content:
+        flash('Error exporting knowledge base.', 'danger')
+        return redirect(url_for('admin.knowledge_base'))
+    
+    # Create a response with the document content
+    response = Response(content)
+    
+    # Set the appropriate headers for file download
+    response.headers['Content-Type'] = 'text/markdown'
+    response.headers['Content-Disposition'] = f'attachment; filename="flypig_knowledge_base_export.md"'
+    
+    return response
+
 # User Management
 @admin_bp.route('/user_management')
 @admin_required
