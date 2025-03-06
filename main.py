@@ -460,44 +460,92 @@ def get_webhook_handler():
         @webhook_handler.add(MessageEvent, message=TextMessage)
         def handle_text_message(event):
             """Handle text messages from LINE users"""
-            # Get message content
-            user_id = event.source.user_id
-            user_message = event.message.text
-            
-            # Save user message to database
-            chat_message = ChatMessage(
-                line_user_id=user_id,
-                is_user_message=True,
-                message_text=user_message
-            )
-            db.session.add(chat_message)
-            db.session.commit()
-            
-            # Check for style command
-            bot_style = None
-            if user_message.startswith('/style '):
-                style_name = user_message[7:].strip()
-                response_text = f"風格已設定為: {style_name}"
-            else:
-                # Generate response using LLMService
-                response_text = LLMService.generate_response(user_message, bot_style)
-            
-            # Save bot response to database
-            bot_message = ChatMessage(
-                line_user_id=user_id,
-                is_user_message=False,
-                message_text=response_text,
-                bot_style=bot_style
-            )
-            db.session.add(bot_message)
-            db.session.commit()
-            
-            # Send response
-            line_bot_api = get_line_bot_api()
-            line_bot_api.reply_message(
-                event.reply_token,
-                TextSendMessage(text=response_text)
-            )
+            try:
+                # Get message content
+                user_id = event.source.user_id
+                user_message = event.message.text
+                
+                # Save user message to database
+                chat_message = ChatMessage(
+                    line_user_id=user_id,
+                    is_user_message=True,
+                    message_text=user_message
+                )
+                db.session.add(chat_message)
+                db.session.commit()
+                
+                # Check for style command
+                style_name = None
+                if user_message.startswith('/style '):
+                    style_name = user_message[7:].strip()
+                    style = BotStyle.query.filter_by(name=style_name).first()
+                    if style:
+                        response_text = f"風格已設定為: {style_name}"
+                    else:
+                        response_text = f"找不到風格: {style_name}，請使用有效的風格名稱"
+                else:
+                    # 使用本地函數產生回應，而非LLMService
+                    api_key = get_openai_api_key()
+                    if not api_key:
+                        response_text = "API key 未設定，請在管理後台設定 OpenAI API key。"
+                    else:
+                        client = OpenAI(api_key=api_key)
+                        
+                        # 獲取風格
+                        default_style_name = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
+                        style = BotStyle.query.filter_by(name=default_style_name).first()
+                        if not style:
+                            style = BotStyle.query.filter_by(name="貼心").first()
+                        
+                        if not style:
+                            response_text = "無法找到有效的機器人風格，請在管理後台設定。"
+                        else:
+                            # 獲取設定
+                            settings = get_llm_settings()
+                            
+                            # 構建訊息
+                            messages = [
+                                {"role": "system", "content": style.prompt},
+                                {"role": "user", "content": user_message}
+                            ]
+                            
+                            # 呼叫API
+                            response = client.chat.completions.create(
+                                model="gpt-4o",
+                                messages=messages,
+                                temperature=settings["temperature"],
+                                max_tokens=settings["max_tokens"]
+                            )
+                            
+                            response_text = response.choices[0].message.content
+                
+                # Save bot response to database
+                bot_message = ChatMessage(
+                    line_user_id=user_id,
+                    is_user_message=False,
+                    message_text=response_text,
+                    bot_style=style_name
+                )
+                db.session.add(bot_message)
+                db.session.commit()
+                
+                # Send response
+                line_bot_api = get_line_bot_api()
+                line_bot_api.reply_message(
+                    event.reply_token,
+                    TextSendMessage(text=response_text)
+                )
+            except Exception as e:
+                logger.error(f"Webhook handling error: {e}")
+                # 即使發生錯誤，至少嘗試回覆一個錯誤訊息
+                try:
+                    line_bot_api = get_line_bot_api()
+                    line_bot_api.reply_message(
+                        event.reply_token,
+                        TextSendMessage(text=f"很抱歉，處理您的訊息時出現了問題。")
+                    )
+                except:
+                    logger.error("Failed to send error message to LINE user")
     
     return webhook_handler
 
@@ -510,12 +558,44 @@ def api_chat():
             return jsonify({'error': 'Invalid request'}), 400
             
         user_message = data['message']
-        style = data.get('style')
+        style_name = data.get('style')
         
-        # Generate response using LLMService
-        response = LLMService.generate_response(user_message, style)
+        # 使用本地函數而非LLMService
+        api_key = get_openai_api_key()
+        if not api_key:
+            return jsonify({'error': 'API key not configured'}), 500
         
-        return jsonify({'response': response})
+        client = OpenAI(api_key=api_key)
+        
+        # 獲取機器人風格
+        if not style_name:
+            style_name = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
+        
+        style = BotStyle.query.filter_by(name=style_name).first()
+        if not style:
+            style = BotStyle.query.filter_by(name="貼心").first()
+            
+        if not style:
+            return jsonify({'error': '找不到對應的機器人風格'}), 500
+            
+        # 獲取OpenAI設定
+        settings = get_llm_settings()
+        
+        # 構建訊息
+        messages = [
+            {"role": "system", "content": style.prompt},
+            {"role": "user", "content": user_message}
+        ]
+        
+        # 呼叫API
+        response = client.chat.completions.create(
+            model="gpt-4o",
+            messages=messages,
+            temperature=settings["temperature"],
+            max_tokens=settings["max_tokens"]
+        )
+        
+        return jsonify({'response': response.choices[0].message.content})
     except Exception as e:
         logger.error(f"API chat error: {e}")
         return jsonify({'error': f"服務錯誤: {str(e)}"}), 500
