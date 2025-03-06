@@ -45,6 +45,9 @@
                                                 data-id="{{ doc.id }}" data-bs-toggle="modal" data-bs-target="#viewDocumentModal">
                                             <i class="fas fa-eye"></i>
                                         </button>
+                                        <a href="{{ url_for('admin.download_document', doc_id=doc.id) }}" class="btn btn-outline-success">
+                                            <i class="fas fa-download"></i>
+                                        </a>
                                         <button type="button" class="btn btn-outline-danger delete-document"
                                                 data-id="{{ doc.id }}" data-title="{{ doc.title }}"
                                                 data-bs-toggle="modal" data-bs-target="#deleteDocumentModal">
@@ -172,6 +175,9 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <a id="downloadDocumentBtn" href="#" class="btn btn-success">
+                    <i class="fas fa-download me-1"></i> Download
+                </a>
             </div>
         </div>
     </div>

@@ -20,6 +20,7 @@ function initViewDocument() {
     const viewButtons = document.querySelectorAll('.view-document');
     const documentTitle = document.getElementById('documentTitle');
     const documentContent = document.getElementById('documentContent');
+    const downloadBtn = document.getElementById('downloadDocumentBtn');
     
     viewButtons.forEach(button => {
         button.addEventListener('click', function() {
@@ -29,6 +30,9 @@ function initViewDocument() {
             documentTitle.textContent = 'Loading...';
             documentContent.textContent = 'Loading document content...';
             
+            // Update download button
+            downloadBtn.href = `/knowledge_base/download/${docId}`;
+            
             // Fetch document data
             fetch(`/knowledge_base/view/${docId}`)
                 .then(response => response.json())
@@ -36,6 +40,9 @@ function initViewDocument() {
                     // Update modal with document data
                     documentTitle.textContent = doc.title;
                     documentContent.textContent = doc.content;
+                    
+                    // Update download button with title
+                    downloadBtn.setAttribute('download', `${doc.title}.txt`);
                 })
                 .catch(error => {
                     console.error('Error fetching document:', error);

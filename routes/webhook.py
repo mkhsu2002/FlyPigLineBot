@@ -10,6 +10,7 @@ from models import ChatMessage, LineUser, db
 from config import get_line_config
 from llm_service import LLMService
 from rag_service import RAGService
+from web_search_service import WebSearchService
 
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)

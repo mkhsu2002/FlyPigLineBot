@@ -355,6 +355,23 @@ def view_document(doc_id):
         'content': document.content
     })
 
+@admin_bp.route('/knowledge_base/download/<int:doc_id>')
+@admin_required
+def download_document(doc_id):
+    """Download a document's content as a text file"""
+    from flask import Response
+    
+    document = Document.query.get_or_404(doc_id)
+    
+    # Create a response with the document content
+    response = Response(document.content)
+    
+    # Set the appropriate headers for file download
+    response.headers['Content-Type'] = 'text/plain'
+    response.headers['Content-Disposition'] = f'attachment; filename="{document.title}.txt"'
+    
+    return response
+
 @admin_bp.route('/knowledge_base/rebuild_index', methods=['POST'])
 @admin_required
 def rebuild_index():
