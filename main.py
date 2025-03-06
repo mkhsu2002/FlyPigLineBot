@@ -166,9 +166,13 @@ def generate_response(user_message, style_name=None):
     # Get OpenAI settings
     settings = get_llm_settings()
     
-    # Build the messages
+    # Get current date and time in Taiwan timezone (UTC+8)
+    taiwan_tz = timezone(timedelta(hours=8))
+    current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
+    
+    # Build the messages with date information
     messages = [
-        {"role": "system", "content": style.prompt},
+        {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"},
         {"role": "user", "content": user_message}
     ]
     
@@ -213,10 +217,10 @@ with app.app_context():
         
         # Create default bot styles
         default_styles = [
-            BotStyle(name="貼心", prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。", is_default=True),
-            BotStyle(name="風趣", prompt="你是一位風趣幽默的阿昌，擅長用輕鬆詼諧的語調回答問題，回應中帶有俏皮的繁體中文表達方式，但不失專業與幫助性。"),
-            BotStyle(name="認真", prompt="你是阿昌，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議。"),
-            BotStyle(name="專業", prompt="你是阿昌，一位技術專家助理，提供詳細、專業的繁體中文回應，使用特定的技術術語和全面的解釋，讓用戶對技術問題有更深入的理解。"),
+            BotStyle(name="貼心", prompt="你是小艾，一個親切溫暖的助理，專注於提供友善、善解人意的服務。你只使用繁體中文交流，表現出關懷、同理心和支持。你會耐心聆聽，並給予令人感到被理解與被照顧的回應。", is_default=True),
+            BotStyle(name="風趣", prompt="你是一位風趣幽默的小艾，擅長用輕鬆詼諧的語調回答問題，回應中帶有俏皮的繁體中文表達方式，善用雙關語和機智的比喻，但不失專業與幫助性。"),
+            BotStyle(name="認真", prompt="你是小艾，一位非常專業的助理，使用正式、商務化的繁體中文進行溝通，提供精確的資訊和適當的建議，重視準確性和效率，並保持客觀和中立的態度。"),
+            BotStyle(name="專業", prompt="你是小艾，一位技術專家助理，提供詳細、專業的繁體中文回應，使用特定的技術術語和全面的解釋，讓用戶對技術問題有更深入的理解，並能清晰闡釋複雜概念。"),
         ]
         for style in default_styles:
             db.session.add(style)
@@ -225,9 +229,9 @@ with app.app_context():
         default_configs = [
             Config(key="OPENAI_TEMPERATURE", value="0.7"),
             Config(key="OPENAI_MAX_TOKENS", value="500"),
-            Config(key="LINE_CHANNEL_ID", value=""),
-            Config(key="LINE_CHANNEL_SECRET", value=""),
-            Config(key="LINE_CHANNEL_ACCESS_TOKEN", value=""),
+            Config(key="LINE_CHANNEL_ID", value="2006519649"),
+            Config(key="LINE_CHANNEL_SECRET", value="2e74932d2f8b9414a29dd1cc3c3b0aae"),
+            Config(key="LINE_CHANNEL_ACCESS_TOKEN", value="HJ12KVElYs3eC6SXGk7EiGKHEUu5i1xF0dZyvqb5zXbdHbCZKJdwQgNLFs5fTvaMfnbNHxCNiofN3jI93jPFcG1IvHLjqiU97XJ8eNfdF+OM3Z9ZtTbvwfYJl9zKZgKB8OwzbTEBLqS2bP8fRFQn4QdB04t89/1O/w1cDnyilFU="),
             Config(key="ACTIVE_BOT_STYLE", value="貼心"),
         ]
         for config in default_configs:
@@ -503,9 +507,13 @@ def get_webhook_handler():
                             # 獲取設定
                             settings = get_llm_settings()
                             
-                            # 構建訊息
+                            # 獲取台灣時區的當前日期
+                            taiwan_tz = timezone(timedelta(hours=8))
+                            current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
+                            
+                            # 構建訊息，包含日期資訊
                             messages = [
-                                {"role": "system", "content": style.prompt},
+                                {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"},
                                 {"role": "user", "content": user_message}
                             ]
                             
@@ -581,9 +589,13 @@ def api_chat():
         # 獲取OpenAI設定
         settings = get_llm_settings()
         
-        # 構建訊息
+        # 獲取台灣時區的當前日期
+        taiwan_tz = timezone(timedelta(hours=8))
+        current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
+        
+        # 構建訊息，包含日期資訊
         messages = [
-            {"role": "system", "content": style.prompt},
+            {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"},
             {"role": "user", "content": user_message}
         ]
         
