@@ -212,9 +212,10 @@ with app.app_context():
         
         # Create default bot styles
         default_styles = [
-            BotStyle(name="Default", prompt="You are a helpful assistant. Respond in a straightforward manner.", is_default=True),
-            BotStyle(name="Humorous", prompt="You are a funny assistant. Always inject humor into your responses."),
-            BotStyle(name="Formal", prompt="You are a formal and professional assistant. Use proper language and avoid colloquialisms."),
+            BotStyle(name="預設", prompt="你是一位有幫助的助手。請用繁體中文回答，以直接明瞭的方式回應。", is_default=True),
+            BotStyle(name="幽默", prompt="你是一位風趣的助手。請用繁體中文回答，在回應中加入幽默元素。"),
+            BotStyle(name="正式", prompt="你是一位正式專業的助手。請用繁體中文回答，使用適當的語言並避免口語化表達。"),
+            BotStyle(name="技術", prompt="你是一位技術專家助手。請用繁體中文回答，使用專業術語，提供詳細解釋，並優先考慮準確性。"),
         ]
         for style in default_styles:
             db.session.add(style)
@@ -226,7 +227,7 @@ with app.app_context():
             Config(key="LINE_CHANNEL_ID", value=""),
             Config(key="LINE_CHANNEL_SECRET", value=""),
             Config(key="LINE_CHANNEL_ACCESS_TOKEN", value=""),
-            Config(key="ACTIVE_BOT_STYLE", value="Default"),
+            Config(key="ACTIVE_BOT_STYLE", value="預設"),
         ]
         for config in default_configs:
             db.session.add(config)
@@ -257,7 +258,7 @@ def login():
             next_page = request.args.get('next')
             return redirect(next_page or url_for('dashboard'))
         
-        flash('Invalid username or password', 'danger')
+        flash('使用者名稱或密碼錯誤', 'danger')
     
     return render_template('login.html')
 
@@ -298,11 +299,11 @@ def bot_settings():
         ConfigManager.set("LINE_CHANNEL_ACCESS_TOKEN", channel_access_token)
         ConfigManager.set("ACTIVE_BOT_STYLE", active_style)
         
-        flash('Bot settings saved successfully', 'success')
+        flash('機器人設定已成功儲存', 'success')
         return redirect(url_for('bot_settings'))
     
     config = get_line_config()
-    active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "Default")
+    active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "預設")
     styles = BotStyle.query.all()
     
     return render_template('bot_settings.html', 
@@ -322,7 +323,7 @@ def llm_settings():
         ConfigManager.set("OPENAI_TEMPERATURE", temperature)
         ConfigManager.set("OPENAI_MAX_TOKENS", max_tokens)
         
-        flash('LLM settings saved successfully', 'success')
+        flash('LLM 設定已成功儲存', 'success')
         return redirect(url_for('llm_settings'))
     
     settings = get_llm_settings()
@@ -350,7 +351,7 @@ def add_bot_style():
         # Check if style with this name already exists
         existing_style = BotStyle.query.filter_by(name=name).first()
         if existing_style:
-            flash(f'Style with name "{name}" already exists', 'danger')
+            flash(f'名稱為 "{name}" 的風格已存在', 'danger')
             return redirect(url_for('add_bot_style'))
         
         style = BotStyle(name=name, prompt=prompt, is_default=is_default)
@@ -439,7 +440,7 @@ def get_webhook_handler():
             bot_style = None
             if user_message.startswith('/style '):
                 style_name = user_message[7:].strip()
-                response_text = f"Style set to: {style_name}"
+                response_text = f"風格已設定為: {style_name}"
             else:
                 # Generate response using OpenAI
                 response_text = generate_response(user_message, bot_style)
