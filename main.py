@@ -273,6 +273,38 @@ def logout():
     logout_user()
     return redirect(url_for('login'))
 
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    if request.method == 'POST':
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # 確認當前密碼是否正確
+        if not check_password_hash(current_user.password_hash, current_password):
+            flash('目前密碼不正確', 'danger')
+            return redirect(url_for('change_password'))
+        
+        # 確認新密碼長度
+        if len(new_password) < 6:
+            flash('新密碼長度需要至少 6 個字元', 'danger')
+            return redirect(url_for('change_password'))
+        
+        # 確認兩次輸入的新密碼是否一致
+        if new_password != confirm_password:
+            flash('兩次輸入的新密碼不一致', 'danger')
+            return redirect(url_for('change_password'))
+        
+        # 更新密碼
+        current_user.password_hash = generate_password_hash(new_password)
+        db.session.commit()
+        
+        flash('密碼已成功更新', 'success')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('change_password.html')
+
 @app.route('/dashboard')
 @login_required
 def dashboard():
