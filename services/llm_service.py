@@ -111,6 +111,9 @@ class LLMService:
     def validate_api_key(api_key):
         """Validate that the provided OpenAI API key works"""
         try:
+            if not api_key:
+                return False
+                
             client = OpenAI(api_key=api_key)
             # Make a small request to validate the key
             response = client.chat.completions.create(
@@ -118,7 +121,7 @@ class LLMService:
                 messages=[{"role": "user", "content": "Hello"}],
                 max_tokens=5
             )
-            return True, "API key is valid"
+            return True
         except Exception as e:
             logger.error(f"API key validation error: {e}")
-            return False, f"API key validation failed: {str(e)}"
+            return False
