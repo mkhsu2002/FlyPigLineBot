@@ -2,6 +2,7 @@ import os
 import json
 import logging
 from openai import OpenAI
+from datetime import datetime, timezone, timedelta
 from routes.utils.config_service import ConfigManager, get_openai_api_key, get_llm_settings
 
 logger = logging.getLogger(__name__)
@@ -59,9 +60,13 @@ class LLMService:
         # Get OpenAI settings
         settings = get_llm_settings()
         
-        # Build the messages
+        # Get current date and time in Taiwan timezone (UTC+8)
+        taiwan_tz = timezone(timedelta(hours=8))
+        current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
+        
+        # Build the messages with date information
         messages = [
-            {"role": "system", "content": style.prompt}
+            {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"}
         ]
         
         # Add RAG context if available

@@ -9,7 +9,7 @@ from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import MessageEvent, TextMessage, TextSendMessage
 import json
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import DeclarativeBase
 from services.llm_service import LLMService
 
