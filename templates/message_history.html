@@ -32,7 +32,7 @@
                         <tbody>
                             {% for message in messages %}
                             <tr>
-                                <td>{{ message.user_id[:8] }}...</td>
+                                <td>{{ message.line_user_id[:8] }}...</td>
                                 <td>
                                     {% if message.is_user_message %}
                                     <span class="badge bg-primary">User</span>
@@ -49,7 +49,7 @@
                                     <button type="button" class="btn btn-sm btn-outline-info view-message-btn" 
                                             data-bs-toggle="modal" data-bs-target="#viewMessageModal"
                                             data-message="{{ message.message_text }}"
-                                            data-user-id="{{ message.user_id }}"
+                                            data-user-id="{{ message.line_user_id }}"
                                             data-type="{% if message.is_user_message %}User{% else %}Bot{% endif %}"
                                             data-timestamp="{{ message.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}">
                                         View

@@ -56,7 +56,7 @@ class BotStyle(db.Model):
 class ChatMessage(db.Model):
     """Model to store chat message history"""
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.String(64), nullable=False)
+    line_user_id = db.Column(db.String(64), nullable=False)
     is_user_message = db.Column(db.Boolean, default=True)
     message_text = db.Column(db.Text, nullable=False)
     bot_style = db.Column(db.String(64), nullable=True)
@@ -428,7 +428,7 @@ def get_webhook_handler():
             
             # Save user message to database
             chat_message = ChatMessage(
-                user_id=user_id,
+                line_user_id=user_id,
                 is_user_message=True,
                 message_text=user_message
             )
@@ -446,7 +446,7 @@ def get_webhook_handler():
             
             # Save bot response to database
             bot_message = ChatMessage(
-                user_id=user_id,
+                line_user_id=user_id,
                 is_user_message=False,
                 message_text=response_text,
                 bot_style=bot_style
