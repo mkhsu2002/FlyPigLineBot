@@ -98,9 +98,19 @@ function testApi() {
             message: message
         })
     })
-    .then(response => response.json())
+    .then(response => {
+        // 檢查回應狀態
+        if (!response.ok) {
+            throw new Error(`HTTP error: ${response.status}`);
+        }
+        return response.json();
+    })
     .then(data => {
-        document.getElementById('responseText').textContent = data.response;
+        if (data.error) {
+            document.getElementById('responseText').textContent = '錯誤: ' + data.error;
+        } else {
+            document.getElementById('responseText').textContent = data.response;
+        }
         document.getElementById('testResult').classList.remove('d-none');
         testBtn.innerHTML = '測試 API';
         testBtn.disabled = false;

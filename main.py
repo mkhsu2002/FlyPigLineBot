@@ -1,6 +1,6 @@
 import os
 import logging
-from flask import Flask, request, abort, render_template, redirect, url_for, flash
+from flask import Flask, request, abort, render_template, redirect, url_for, flash, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -504,17 +504,21 @@ def get_webhook_handler():
 # Web API endpoint for testing the bot
 @app.route('/api/chat', methods=['POST'])
 def api_chat():
-    data = request.json
-    if not data or 'message' not in data:
-        return {'error': 'Invalid request'}, 400
+    try:
+        data = request.json
+        if not data or 'message' not in data:
+            return jsonify({'error': 'Invalid request'}), 400
+            
+        user_message = data['message']
+        style = data.get('style')
         
-    user_message = data['message']
-    style = data.get('style')
-    
-    # Generate response using LLMService
-    response = LLMService.generate_response(user_message, style)
-    
-    return {'response': response}
+        # Generate response using LLMService
+        response = LLMService.generate_response(user_message, style)
+        
+        return jsonify({'response': response})
+    except Exception as e:
+        logger.error(f"API chat error: {e}")
+        return jsonify({'error': f"服務錯誤: {str(e)}"}), 500
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
