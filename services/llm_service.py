@@ -24,19 +24,19 @@ class LLMService:
         """Get the bot style prompt by name or use the active style"""
         # Import here to avoid circular imports
         from app import db
-        import models
+        from main import BotStyle
         
         if not style_name:
             style_name = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
         
-        style = models.BotStyle.query.filter_by(name=style_name).first()
+        style = BotStyle.query.filter_by(name=style_name).first()
         if not style:
             # Fallback to default style
-            style = models.BotStyle.query.filter_by(name="貼心").first()
+            style = BotStyle.query.filter_by(name="貼心").first()
             
             # If no default style exists, create it
             if not style:
-                style = models.BotStyle(
+                style = BotStyle(
                     name="貼心",
                     prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。",
                     is_default=True
