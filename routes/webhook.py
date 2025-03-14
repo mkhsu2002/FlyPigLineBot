@@ -7,9 +7,7 @@ from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
-from models import ChatMessage, LineUser
 # 避免循環導入，使用函數延遲導入
-# from app import db
 from llm_service import LLMService
 # 避免循環導入
 # from rag_service import RAGService
@@ -24,6 +22,12 @@ logger = logging.getLogger(__name__)
 def get_db():
     from app import db
     return db
+
+# 延遲導入模型
+def get_models():
+    """延遲導入模型以避免循環引用"""
+    from app import BotStyle, LineUser, ChatMessage, User, Document
+    return BotStyle, LineUser, ChatMessage, User, Document
 
 # Initialize the LINE Bot API and handler
 def get_line_bot_api():
@@ -77,6 +81,9 @@ def handle_text_message(event):
         # 使用重試機制處理數據庫操作
         for db_attempt in range(max_db_retries):
             try:
+                # 獲取模型
+                _, LineUser, ChatMessage, _, _ = get_models()
+                
                 # 獲取或創建 LINE 用戶
                 line_user = LineUser.query.filter_by(line_user_id=user_id).first()
                 if not line_user:
@@ -142,6 +149,8 @@ def handle_text_message(event):
                 response_text = f"風格設定為: {style_name}"
                 
                 # 保存機器人回應到數據庫
+                # 確保已經獲取了模型
+                _, _, ChatMessage, _, _ = get_models()
                 bot_message = ChatMessage(
                     line_user_id=user_id,
                     is_user_message=False,
@@ -214,6 +223,8 @@ def handle_text_message(event):
         
         # 保存機器人回應到數據庫
         try:
+            # 確保已經獲取了模型
+            _, _, ChatMessage, _, _ = get_models()
             bot_message = ChatMessage(
                 line_user_id=user_id,
                 is_user_message=False,

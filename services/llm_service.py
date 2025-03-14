@@ -23,9 +23,16 @@ class LLMService:
     @staticmethod
     def get_bot_style(style_name=None):
         """Get the bot style prompt by name or use the active style"""
-        # Import here to avoid circular imports
+        # 使用延遲導入獲取模型和數據庫會話，避免循環引用
         from app import db
-        from main import BotStyle
+        
+        # 使用延遲導入獲取增強的模型
+        def get_models():
+            """延遲導入模型以避免循環引用"""
+            from app import BotStyle, LineUser, ChatMessage, User, Document
+            return BotStyle, LineUser, ChatMessage, User, Document
+        
+        BotStyle, _, _, _, _ = get_models()
         
         if not style_name:
             style_name = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
