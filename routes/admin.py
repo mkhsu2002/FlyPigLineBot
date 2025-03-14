@@ -386,7 +386,11 @@ def export_messages():
 @admin_required
 def knowledge_base():
     """Knowledge base management page"""
-    documents = Document.query.order_by(Document.uploaded_at.desc()).all()
+    # 獲取數據庫會話和模型
+    db = get_db()
+    _, _, _, _, Document = get_models()
+    
+    documents = db.session.query(Document).order_by(Document.uploaded_at.desc()).all()
     form = DocumentForm()
     return render_template('knowledge_base.html', documents=documents, form=form)
 
@@ -508,6 +512,9 @@ def bulk_upload():
 @admin_required
 def delete_document(doc_id):
     """Delete a document from the knowledge base"""
+    # 獲取 RAG 服務
+    RAGService = get_rag_service()
+    
     success, message = RAGService.delete_document(doc_id)
     
     if success:
@@ -521,7 +528,11 @@ def delete_document(doc_id):
 @admin_required
 def view_document(doc_id):
     """View a document's content"""
-    document = Document.query.get_or_404(doc_id)
+    # 獲取數據庫會話和模型
+    db = get_db()
+    _, _, _, _, Document = get_models()
+    
+    document = db.session.query(Document).get_or_404(doc_id)
     return jsonify({
         'id': document.id,
         'title': document.title,
@@ -534,7 +545,11 @@ def download_document(doc_id):
     """Download a document's content as a text file"""
     from flask import Response
     
-    document = Document.query.get_or_404(doc_id)
+    # 獲取數據庫會話和模型
+    db = get_db()
+    _, _, _, _, Document = get_models()
+    
+    document = db.session.query(Document).get_or_404(doc_id)
     
     # Create a response with the document content
     response = Response(document.content)
@@ -549,6 +564,9 @@ def download_document(doc_id):
 @admin_required
 def rebuild_index():
     """Rebuild the FAISS index"""
+    # 獲取 RAG 服務
+    RAGService = get_rag_service()
+    
     success = RAGService.update_index()
     
     if success:
@@ -563,6 +581,9 @@ def rebuild_index():
 def export_knowledge_base():
     """Export all knowledge base documents as a downloadable file"""
     from flask import Response
+    
+    # 獲取 RAG 服務
+    RAGService = get_rag_service()
     
     # Get exported content
     content = RAGService.export_knowledge_base()
