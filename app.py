@@ -23,8 +23,12 @@ app.secret_key = os.environ.get("SESSION_SECRET", "flypig-line-bot-secret")
 # Configure the database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///flypig.db")
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
-    "pool_recycle": 300,
+    "pool_recycle": 180,  # 減少連接池回收時間
     "pool_pre_ping": True,
+    "pool_size": 10,  # 設置連接池大小
+    "max_overflow": 15,  # 設置最大溢出連接數
+    "pool_timeout": 30,  # 連接池超時時間
+    "connect_args": {"connect_timeout": 10}  # 設置連接超時
 }
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 

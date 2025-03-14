@@ -57,55 +57,73 @@ class LLMService:
             rag_context (str, optional): Additional context from RAG. Defaults to None.
             system_prompt (str, optional): Custom system prompt that overrides the style. Defaults to None.
         """
-        client = LLMService.get_client()
-        if not client:
-            return "抱歉，無法連接 AI 服務，請檢查 API 設定。"
+        # 重試機制設置
+        max_retries = 3
+        retry_delay = 1  # 初始延遲秒數
         
-        # Get OpenAI settings
-        settings = get_llm_settings()
-        
-        # Get current date and time in Taiwan timezone (UTC+8)
-        taiwan_tz = timezone(timedelta(hours=8))
-        current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
-        
-        # Determine the system prompt
-        if system_prompt:
-            # Use the provided custom system prompt
-            prompt_content = f"{system_prompt} 真實即時日期是 {current_date}。"
-        else:
-            # Get the bot style
-            style = LLMService.get_bot_style(style_name)
-            prompt_content = f"{style.prompt} 真實即時日期是 {current_date}。"
-        
-        # Build the messages with date information
-        messages = [
-            {"role": "system", "content": prompt_content}
-        ]
-        
-        # Add RAG context if available
-        if rag_context:
-            messages.append({
-                "role": "system", 
-                "content": f"Here is some additional context that might be helpful: {rag_context}"
-            })
-        
-        # Add user message
-        messages.append({"role": "user", "content": user_message})
-        
-        try:
-            # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
-            # do not change this unless explicitly requested by the user
-            response = client.chat.completions.create(
-                model="gpt-4o",
-                messages=messages,
-                temperature=settings["temperature"],
-                max_tokens=settings["max_tokens"]
-            )
-            
-            return response.choices[0].message.content
-        except Exception as e:
-            logger.error(f"Error generating response: {e}")
-            return f"抱歉，生成回應時發生錯誤：{str(e)}"
+        for attempt in range(max_retries):
+            try:
+                # 獲取 OpenAI 客戶端
+                client = LLMService.get_client()
+                if not client:
+                    return "抱歉，無法連接 AI 服務，請檢查 API 設定。"
+                
+                # 獲取 OpenAI 設定
+                settings = get_llm_settings()
+                
+                # 獲取台灣時區 (UTC+8) 的當前日期時間
+                taiwan_tz = timezone(timedelta(hours=8))
+                current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
+                
+                # 確定系統提示
+                if system_prompt:
+                    # 使用提供的自定義系統提示
+                    prompt_content = f"{system_prompt} 真實即時日期是 {current_date}。"
+                else:
+                    # 獲取機器人風格
+                    style = LLMService.get_bot_style(style_name)
+                    prompt_content = f"{style.prompt} 真實即時日期是 {current_date}。"
+                
+                # 構建訊息
+                messages = [
+                    {"role": "system", "content": prompt_content}
+                ]
+                
+                # 添加 RAG 上下文（如果有）
+                if rag_context:
+                    messages.append({
+                        "role": "system", 
+                        "content": f"Here is some additional context that might be helpful: {rag_context}"
+                    })
+                
+                # 添加用戶訊息
+                messages.append({"role": "user", "content": user_message})
+                
+                # 設置 timeout 為 30 秒
+                # the newest OpenAI model is "gpt-4o" which was released May 13, 2024.
+                # do not change this unless explicitly requested by the user
+                response = client.chat.completions.create(
+                    model="gpt-4o",
+                    messages=messages,
+                    temperature=settings["temperature"],
+                    max_tokens=settings["max_tokens"],
+                    timeout=30.0
+                )
+                
+                # 成功接收回應
+                return response.choices[0].message.content
+                
+            except Exception as e:
+                logger.error(f"Error generating response (attempt {attempt+1}/{max_retries}): {e}")
+                
+                if attempt < max_retries - 1:
+                    # 如果還有重試機會，等待後重試
+                    import time
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # 指數退避
+                else:
+                    # 所有重試都失敗
+                    return f"抱歉，生成回應時發生錯誤，已嘗試 {max_retries} 次：{str(e)}"
     
     @staticmethod
     def validate_api_key(api_key):
