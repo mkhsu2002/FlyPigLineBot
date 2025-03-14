@@ -1,6 +1,7 @@
 import os
 import logging
 import json
+from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
@@ -683,3 +684,252 @@ def get_user(user_id):
         'email': user.email,
         'is_admin': user.is_admin
     })
+
+# 設定匯出和匯入功能
+@admin_bp.route('/export_bot_settings')
+@admin_required
+def export_bot_settings():
+    """Export LINE Bot settings as JSON file"""
+    settings = {
+        'channel_id': ConfigManager.get("LINE_CHANNEL_ID", ""),
+        'channel_secret': ConfigManager.get("LINE_CHANNEL_SECRET", ""),
+        'channel_access_token': ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", ""),
+        'active_style': ConfigManager.get("ACTIVE_BOT_STYLE", "Default"),
+        'rag_enabled': ConfigManager.get("RAG_ENABLED", "True") == "True",
+        'web_search_enabled': ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True",
+        'serpapi_key': ConfigManager.get("SERPAPI_KEY", ""),
+        'exported_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # Create response
+    response = make_response(json.dumps(settings, ensure_ascii=False, indent=2))
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Content-Disposition'] = 'attachment; filename=flypig_bot_settings.json'
+    return response
+
+@admin_bp.route('/import_bot_settings', methods=['POST'])
+@admin_required
+def import_bot_settings():
+    """Import LINE Bot settings from JSON file"""
+    if 'settings_file' not in request.files:
+        flash('未選擇設定檔案', 'danger')
+        return redirect(url_for('admin.bot_settings'))
+    
+    file = request.files['settings_file']
+    if file.filename == '':
+        flash('未選擇設定檔案', 'danger')
+        return redirect(url_for('admin.bot_settings'))
+    
+    if not file.filename.lower().endswith('.json'):
+        flash('僅支援 JSON 檔案格式', 'danger')
+        return redirect(url_for('admin.bot_settings'))
+    
+    try:
+        content = file.read().decode('utf-8')
+        settings = json.loads(content)
+        
+        # Validate required fields
+        required_fields = ['channel_id', 'channel_secret', 'channel_access_token', 'active_style']
+        for field in required_fields:
+            if field not in settings:
+                flash(f'設定檔案缺少必要欄位: {field}', 'danger')
+                return redirect(url_for('admin.bot_settings'))
+        
+        # Update settings
+        ConfigManager.set("LINE_CHANNEL_ID", settings['channel_id'])
+        ConfigManager.set("LINE_CHANNEL_SECRET", settings['channel_secret'])
+        ConfigManager.set("LINE_CHANNEL_ACCESS_TOKEN", settings['channel_access_token'])
+        ConfigManager.set("ACTIVE_BOT_STYLE", settings['active_style'])
+        
+        # Optional settings
+        if 'rag_enabled' in settings:
+            ConfigManager.set("RAG_ENABLED", str(settings['rag_enabled']))
+        if 'web_search_enabled' in settings:
+            ConfigManager.set("WEB_SEARCH_ENABLED", str(settings['web_search_enabled']))
+        if 'serpapi_key' in settings:
+            ConfigManager.set("SERPAPI_KEY", settings['serpapi_key'])
+        
+        flash('機器人設定匯入成功', 'success')
+    except Exception as e:
+        flash(f'匯入設定時發生錯誤: {str(e)}', 'danger')
+        logger.error(f"Import bot settings error: {str(e)}")
+    
+    return redirect(url_for('admin.bot_settings'))
+
+@admin_bp.route('/export_bot_styles')
+@admin_required
+def export_bot_styles():
+    """Export all bot styles as JSON file"""
+    styles = BotStyle.query.all()
+    export_data = []
+    
+    for style in styles:
+        export_data.append({
+            'name': style.name,
+            'prompt': style.prompt,
+            'description': style.description,
+            'is_default': style.is_default
+        })
+    
+    export = {
+        'styles': export_data,
+        'exported_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # Create response
+    response = make_response(json.dumps(export, ensure_ascii=False, indent=2))
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Content-Disposition'] = 'attachment; filename=flypig_bot_styles.json'
+    return response
+
+@admin_bp.route('/import_bot_styles', methods=['POST'])
+@admin_required
+def import_bot_styles():
+    """Import bot styles from JSON file"""
+    if 'styles_file' not in request.files:
+        flash('未選擇風格檔案', 'danger')
+        return redirect(url_for('admin.bot_styles'))
+    
+    file = request.files['styles_file']
+    if file.filename == '':
+        flash('未選擇風格檔案', 'danger')
+        return redirect(url_for('admin.bot_styles'))
+    
+    if not file.filename.lower().endswith('.json'):
+        flash('僅支援 JSON 檔案格式', 'danger')
+        return redirect(url_for('admin.bot_styles'))
+    
+    # Check if we should overwrite existing styles
+    overwrite = 'overwrite_existing' in request.form
+    
+    try:
+        content = file.read().decode('utf-8')
+        data = json.loads(content)
+        
+        if 'styles' not in data or not isinstance(data['styles'], list):
+            flash('檔案格式無效，未找到風格資料', 'danger')
+            return redirect(url_for('admin.bot_styles'))
+        
+        styles_data = data['styles']
+        imported_count = 0
+        skipped_count = 0
+        
+        for style_data in styles_data:
+            # Validate required fields
+            if 'name' not in style_data or 'prompt' not in style_data:
+                logger.warning(f"Skipping style import - missing required fields: {style_data}")
+                skipped_count += 1
+                continue
+            
+            # Check if style exists
+            existing = BotStyle.query.filter_by(name=style_data['name']).first()
+            if existing and not overwrite:
+                logger.info(f"Skipping existing style: {style_data['name']}")
+                skipped_count += 1
+                continue
+            
+            if existing:
+                # Update existing style
+                existing.prompt = style_data['prompt']
+                existing.description = style_data.get('description', '')
+                if 'is_default' in style_data and style_data['is_default']:
+                    BotStyle.query.update({'is_default': False})
+                    existing.is_default = True
+                    ConfigManager.set("ACTIVE_BOT_STYLE", existing.name)
+            else:
+                # Create new style
+                is_default = style_data.get('is_default', False)
+                if is_default:
+                    BotStyle.query.update({'is_default': False})
+                    
+                new_style = BotStyle(
+                    name=style_data['name'],
+                    prompt=style_data['prompt'],
+                    description=style_data.get('description', ''),
+                    is_default=is_default
+                )
+                db.session.add(new_style)
+                
+                if is_default:
+                    ConfigManager.set("ACTIVE_BOT_STYLE", new_style.name)
+            
+            imported_count += 1
+        
+        db.session.commit()
+        
+        if imported_count > 0:
+            if skipped_count > 0:
+                flash(f'成功匯入 {imported_count} 個風格，跳過 {skipped_count} 個風格', 'success')
+            else:
+                flash(f'成功匯入 {imported_count} 個風格', 'success')
+        else:
+            flash('未匯入任何風格', 'warning')
+            
+    except Exception as e:
+        flash(f'匯入風格時發生錯誤: {str(e)}', 'danger')
+        logger.error(f"Import bot styles error: {str(e)}")
+    
+    return redirect(url_for('admin.bot_styles'))
+
+@admin_bp.route('/export_llm_settings')
+@admin_required
+def export_llm_settings():
+    """Export LLM settings as JSON file"""
+    settings = {
+        'api_key': ConfigManager.get("OPENAI_API_KEY", ""),
+        'temperature': float(ConfigManager.get("OPENAI_TEMPERATURE", "0.7")),
+        'max_tokens': int(ConfigManager.get("OPENAI_MAX_TOKENS", "500")),
+        'exported_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+    }
+    
+    # Create response
+    response = make_response(json.dumps(settings, ensure_ascii=False, indent=2))
+    response.headers['Content-Type'] = 'application/json'
+    response.headers['Content-Disposition'] = 'attachment; filename=flypig_llm_settings.json'
+    return response
+
+@admin_bp.route('/import_llm_settings', methods=['POST'])
+@admin_required
+def import_llm_settings():
+    """Import LLM settings from JSON file"""
+    if 'settings_file' not in request.files:
+        flash('未選擇設定檔案', 'danger')
+        return redirect(url_for('admin.llm_settings'))
+    
+    file = request.files['settings_file']
+    if file.filename == '':
+        flash('未選擇設定檔案', 'danger')
+        return redirect(url_for('admin.llm_settings'))
+    
+    if not file.filename.lower().endswith('.json'):
+        flash('僅支援 JSON 檔案格式', 'danger')
+        return redirect(url_for('admin.llm_settings'))
+    
+    try:
+        content = file.read().decode('utf-8')
+        settings = json.loads(content)
+        
+        # Validate required fields
+        required_fields = ['api_key', 'temperature', 'max_tokens']
+        for field in required_fields:
+            if field not in settings:
+                flash(f'設定檔案缺少必要欄位: {field}', 'danger')
+                return redirect(url_for('admin.llm_settings'))
+        
+        # Validate API key
+        valid, message = LLMService.validate_api_key(settings['api_key'])
+        if not valid:
+            flash(f'API 金鑰驗證失敗: {message}', 'danger')
+            return redirect(url_for('admin.llm_settings'))
+        
+        # Update settings
+        ConfigManager.set("OPENAI_API_KEY", settings['api_key'])
+        ConfigManager.set("OPENAI_TEMPERATURE", str(settings['temperature']))
+        ConfigManager.set("OPENAI_MAX_TOKENS", str(settings['max_tokens']))
+        
+        flash('LLM 設定匯入成功', 'success')
+    except Exception as e:
+        flash(f'匯入設定時發生錯誤: {str(e)}', 'danger')
+        logger.error(f"Import LLM settings error: {str(e)}")
+    
+    return redirect(url_for('admin.llm_settings'))
