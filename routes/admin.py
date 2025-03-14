@@ -14,14 +14,23 @@ logger = logging.getLogger(__name__)
 
 # 使用延遲導入避免循環引用問題
 def get_db():
-    from app import db
+    from main import db
     return db
 
 def get_models():
     """延遲導入模型以避免循環引用"""
-    # 從 app 模組中導入 SQLAlchemy 連接的模型類
-    # 這樣可以確保我們使用的是與數據庫相連接的模型類，而不是純粹的 models.py 中的類
-    from app import BotStyle, LineUser, ChatMessage, User, Document
+    # 從 main 模組中導入 SQLAlchemy 連接的模型類
+    from main import BotStyle, ChatMessage, User, Config
+    
+    # Document 類可能定義在 models.py 或其他模塊
+    try:
+        from main import Document
+    except ImportError:
+        from models import Document
+    
+    # LineUser 類定義在 models.py
+    from models import LineUser
+    
     return BotStyle, LineUser, ChatMessage, User, Document
 
 def get_llm_service():

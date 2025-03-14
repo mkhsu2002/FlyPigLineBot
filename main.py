@@ -12,13 +12,13 @@ import json
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import DeclarativeBase
 from services.llm_service import LLMService
-from routes.admin import admin_bp
-from routes.auth import auth_bp
-from routes.webhook import webhook_bp
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
+# Global variables
+webhook_handler = None
 
 class Base(DeclarativeBase):
     pass
@@ -40,10 +40,7 @@ db.init_app(app)
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
-# Register blueprints
-app.register_blueprint(admin_bp, url_prefix='/admin')
-app.register_blueprint(auth_bp, url_prefix='/auth')
-app.register_blueprint(webhook_bp)
+# Register blueprints will be done after models are defined
 
 # Models
 class User(UserMixin, db.Model):
@@ -207,7 +204,11 @@ def get_line_bot_api():
 
 def get_line_webhook_handler():
     """Get a LINE Webhook handler with current config"""
-    return get_webhook_handler()
+    global webhook_handler
+    if webhook_handler is None:
+        config = get_line_config()
+        webhook_handler = WebhookHandler(config["channel_secret"])
+    return webhook_handler
 
 # Create tables and initial data
 with app.app_context():
@@ -758,6 +759,17 @@ def api_chat():
     except Exception as e:
         logger.error(f"API chat error: {e}")
         return jsonify({'error': f"服務錯誤: {str(e)}"}), 500
+
+# Register blueprints after all models and functions are defined
+from routes.admin import admin_bp
+from routes.auth import auth_bp
+from routes.webhook import webhook_bp
+
+app.register_blueprint(admin_bp, url_prefix='/admin')
+app.register_blueprint(auth_bp, url_prefix='/auth')
+app.register_blueprint(webhook_bp)
+
+logger.info("Application initialization complete")
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
