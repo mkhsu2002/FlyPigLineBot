@@ -3,11 +3,16 @@ import logging
 import numpy as np
 import faiss
 import pickle
-from models import Document
 from flask import current_app
 from config import is_rag_enabled
 from llm_service import LLMService
 from app import db
+
+# 延遲導入模型函數
+def get_document_model():
+    """獲取 Document 模型"""
+    from app import Document
+    return Document
 
 logger = logging.getLogger(__name__)
 
@@ -76,6 +81,7 @@ class RAGService:
             index, doc_embeddings = RAGService.initialize_index()
             
             # Get all active documents
+            Document = get_document_model()
             documents = Document.query.filter_by(is_active=True).all()
             
             # Reset index
@@ -214,7 +220,8 @@ class RAGService:
     def add_document(title, content, filename=None):
         """Add a document to the database and update the index"""
         try:
-            # Add to database
+            # Get Document model and add to database
+            Document = get_document_model()
             doc = Document(
                 title=title,
                 content=content,
@@ -238,6 +245,7 @@ class RAGService:
     def export_knowledge_base():
         """Export all knowledge base documents as a downloadable file"""
         try:
+            Document = get_document_model()
             documents = Document.query.all()
             
             # Create a formatted text file with all documents
@@ -260,6 +268,7 @@ class RAGService:
     def delete_document(doc_id):
         """Delete a document from the database and update the index"""
         try:
+            Document = get_document_model()
             doc = Document.query.get(doc_id)
             if not doc:
                 return False, "Document not found"

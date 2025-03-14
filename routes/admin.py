@@ -301,6 +301,10 @@ def delete_bot_style(style_id):
 @admin_required
 def get_bot_style(style_id):
     """Get a bot style as JSON for editing"""
+    # 獲取數據庫會話和模型
+    db = get_db()
+    BotStyle, _, _, _, _ = get_models()
+    
     style = BotStyle.query.get_or_404(style_id)
     return jsonify({
         'id': style.id,
