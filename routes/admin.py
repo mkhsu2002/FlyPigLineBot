@@ -390,7 +390,10 @@ def knowledge_base():
     db = get_db()
     _, _, _, _, Document = get_models()
     
-    documents = db.session.query(Document).order_by(Document.uploaded_at.desc()).all()
+    # 修正查詢方式，從類實例查詢而不是類本身
+    # SQLAlchemy 在使用 ORM 模式時需要實例化的模型對象
+    from sqlalchemy import desc
+    documents = db.session.query(Document).order_by(desc('uploaded_at')).all()
     form = DocumentForm()
     return render_template('knowledge_base.html', documents=documents, form=form)
 
