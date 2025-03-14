@@ -8,8 +8,16 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">機器人設定</h5>
+                <div>
+                    <a href="{{ url_for('admin.export_bot_settings') }}" class="btn btn-sm btn-outline-primary me-2">
+                        <i class="bi bi-download"></i> 匯出設定
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importBotSettingsModal">
+                        <i class="bi bi-upload"></i> 匯入設定
+                    </button>
+                </div>
             </div>
             <div class="card-body">
                 <form action="{{ url_for('bot_settings') }}" method="POST">
@@ -83,6 +91,30 @@
                     <button class="btn btn-outline-secondary" type="button" id="copyWebhook" onclick="copyWebhookUrl()">複製</button>
                 </div>
                 <p class="small text-muted mb-0">這是 LINE 用來發送訊息到您的機器人的網址。</p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 匯入設定模態窗口 -->
+<div class="modal fade" id="importBotSettingsModal" tabindex="-1" aria-labelledby="importBotSettingsModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importBotSettingsModalLabel">匯入機器人設定</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin.import_bot_settings') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="botSettingsFile" class="form-label">選擇設定檔案</label>
+                        <input class="form-control" type="file" id="botSettingsFile" name="settings_file" accept=".json">
+                        <div class="form-text">請上傳先前匯出的機器人設定檔案 (.json)</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">匯入</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

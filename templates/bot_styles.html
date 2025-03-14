@@ -11,8 +11,16 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">可用風格</h5>
+                <div>
+                    <a href="{{ url_for('admin.export_bot_styles') }}" class="btn btn-sm btn-outline-primary me-2">
+                        <i class="bi bi-download"></i> 匯出所有風格
+                    </a>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#importStylesModal">
+                        <i class="bi bi-upload"></i> 匯入風格
+                    </button>
+                </div>
             </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
@@ -79,6 +87,35 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">關閉</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- 匯入風格模態窗口 -->
+<div class="modal fade" id="importStylesModal" tabindex="-1" aria-labelledby="importStylesModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="importStylesModalLabel">匯入回應風格</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form method="POST" action="{{ url_for('admin.import_bot_styles') }}" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="stylesFile" class="form-label">選擇風格檔案</label>
+                        <input class="form-control" type="file" id="stylesFile" name="styles_file" accept=".json">
+                        <div class="form-text">請上傳先前匯出的回應風格檔案 (.json)</div>
+                    </div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="overwriteExisting" name="overwrite_existing">
+                        <label class="form-check-label" for="overwriteExisting">覆蓋已存在的風格</label>
+                        <div class="form-text">若勾選，已存在相同名稱的風格將被覆蓋；若不勾選，則跳過匯入</div>
+                    </div>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                        <button type="submit" class="btn btn-primary">匯入</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
