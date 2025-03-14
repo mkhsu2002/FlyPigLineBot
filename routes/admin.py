@@ -1,6 +1,7 @@
 import os
 import logging
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify
+import json
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from models import BotStyle, Config, ChatMessage, Document, LineUser, User
@@ -291,6 +292,68 @@ def message_history():
     users = LineUser.query.all()
     
     return render_template('message_history.html', messages=messages, users=users, current_user_id=user_id)
+
+@admin_bp.route('/export_messages')
+@admin_required
+def export_messages():
+    """Export message history as CSV or JSON"""
+    export_format = request.args.get('format', 'csv').lower()
+    user_id = request.args.get('user_id')
+    
+    # Build query
+    query = ChatMessage.query
+    if user_id:
+        query = query.filter_by(line_user_id=user_id)
+    
+    # Get all messages ordered by timestamp
+    messages = query.order_by(ChatMessage.timestamp.asc()).all()
+    
+    if export_format == 'json':
+        # Convert to JSON
+        data = []
+        for msg in messages:
+            data.append({
+                'id': msg.id,
+                'line_user_id': msg.line_user_id,
+                'is_user_message': msg.is_user_message,
+                'message_text': msg.message_text,
+                'bot_style': msg.bot_style,
+                'timestamp': msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+            })
+        
+        # Create response
+        response = make_response(json.dumps(data, ensure_ascii=False, indent=2))
+        response.headers['Content-Type'] = 'application/json'
+        response.headers['Content-Disposition'] = 'attachment; filename=messages_export.json'
+        return response
+    
+    # Default to CSV format
+    import csv
+    import io
+    
+    # Create CSV content in memory
+    output = io.StringIO()
+    writer = csv.writer(output)
+    
+    # Write header
+    writer.writerow(['ID', 'LINE用戶ID', '訊息類型', '訊息內容', '機器人風格', '時間戳記'])
+    
+    # Write data rows
+    for msg in messages:
+        writer.writerow([
+            msg.id,
+            msg.line_user_id,
+            '用戶' if msg.is_user_message else '機器人',
+            msg.message_text,
+            msg.bot_style or '',
+            msg.timestamp.strftime('%Y-%m-%d %H:%M:%S')
+        ])
+    
+    # Create response with CSV content
+    response = make_response(output.getvalue())
+    response.headers['Content-Type'] = 'text/csv; charset=utf-8'
+    response.headers['Content-Disposition'] = 'attachment; filename=messages_export.csv'
+    return response
 
 # Knowledge Base
 @admin_bp.route('/knowledge_base')

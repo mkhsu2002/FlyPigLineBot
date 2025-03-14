@@ -345,10 +345,21 @@ def bot_settings():
         channel_access_token = request.form.get('channel_access_token')
         active_style = request.form.get('active_style')
         
+        # 獲取 RAG 和網路搜尋相關的設定
+        rag_enabled = 'rag_enabled' in request.form
+        web_search_enabled = 'web_search_enabled' in request.form
+        serpapi_key = request.form.get('serpapi_key', '')
+        
+        # 儲存基本設定
         ConfigManager.set("LINE_CHANNEL_ID", channel_id)
         ConfigManager.set("LINE_CHANNEL_SECRET", channel_secret)
         ConfigManager.set("LINE_CHANNEL_ACCESS_TOKEN", channel_access_token)
         ConfigManager.set("ACTIVE_BOT_STYLE", active_style)
+        
+        # 儲存 RAG 和網路搜尋設定
+        ConfigManager.set("RAG_ENABLED", str(rag_enabled))
+        ConfigManager.set("WEB_SEARCH_ENABLED", str(web_search_enabled))
+        ConfigManager.set("SERPAPI_KEY", serpapi_key)
         
         flash('機器人設定已成功儲存', 'success')
         return redirect(url_for('bot_settings'))
@@ -357,10 +368,18 @@ def bot_settings():
     active_style = ConfigManager.get("ACTIVE_BOT_STYLE", "貼心")
     styles = BotStyle.query.all()
     
+    # 獲取 RAG 和網路搜尋設定
+    rag_enabled = ConfigManager.get("RAG_ENABLED", "False") == "True"
+    web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
+    serpapi_key = ConfigManager.get("SERPAPI_KEY", "")
+    
     return render_template('bot_settings.html', 
                            config=config, 
                            active_style=active_style,
-                           styles=styles)
+                           styles=styles,
+                           rag_enabled=rag_enabled,
+                           web_search_enabled=web_search_enabled,
+                           serpapi_key=serpapi_key)
 
 @app.route('/llm-settings', methods=['GET', 'POST'])
 @login_required
@@ -533,6 +552,34 @@ def get_webhook_handler():
                         response_text = f"風格已設定為: {style_name}"
                     else:
                         response_text = f"找不到風格: {style_name}，請使用有效的風格名稱"
+                # Check for search command
+                elif user_message.startswith('/搜尋 ') or user_message.startswith('/search '):
+                    # 檢查是否啟用網路搜尋
+                    web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
+                    if not web_search_enabled:
+                        response_text = "網路搜尋功能尚未啟用，請在管理後台啟用該功能。"
+                    else:
+                        try:
+                            # 提取搜尋關鍵詞
+                            if user_message.startswith('/搜尋 '):
+                                search_query = user_message[4:].strip()
+                            else:
+                                search_query = user_message[8:].strip()
+                                
+                            if not search_query:
+                                response_text = "請提供搜尋關鍵詞，例如：/搜尋 台北天氣"
+                            else:
+                                logger.info(f"Web search requested: {search_query}")
+                                # 使用網路搜尋服務
+                                from web_search_service import WebSearchService
+                                search_response = WebSearchService.answer_with_web_search(search_query)
+                                if search_response:
+                                    response_text = search_response
+                                else:
+                                    response_text = "很抱歉，搜尋功能暫時無法使用或未找到相關資訊。"
+                        except Exception as search_error:
+                            logger.error(f"Web search error: {search_error}")
+                            response_text = "網路搜尋時發生錯誤，請稍後再試。"
                 else:
                     # 使用本地函數產生回應，而非LLMService
                     api_key = get_openai_api_key()
@@ -557,11 +604,27 @@ def get_webhook_handler():
                             taiwan_tz = timezone(timedelta(hours=8))
                             current_date = datetime.now(taiwan_tz).strftime("%Y年%m月%d日")
                             
-                            # 構建訊息，包含日期資訊
+                                    # 構建訊息，包含日期資訊
                             messages = [
-                                {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"},
-                                {"role": "user", "content": user_message}
+                                {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"}
                             ]
+                            
+                            # 檢查是否啟用 RAG
+                            rag_enabled = ConfigManager.get("RAG_ENABLED", "False") == "True"
+                            if rag_enabled:
+                                try:
+                                    from rag_service import RAGService
+                                    rag_context = RAGService.get_context_for_query(user_message)
+                                    if rag_context:
+                                        messages.append({
+                                            "role": "system", 
+                                            "content": f"以下是可能對回答有幫助的知識庫資訊：{rag_context}"
+                                        })
+                                except Exception as rag_error:
+                                    logger.error(f"RAG error: {rag_error}")
+                            
+                            # 添加用戶訊息
+                            messages.append({"role": "user", "content": user_message})
                             
                             # 呼叫API
                             response = client.chat.completions.create(
@@ -641,9 +704,39 @@ def api_chat():
         
         # 構建訊息，包含日期資訊
         messages = [
-            {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"},
-            {"role": "user", "content": user_message}
+            {"role": "system", "content": f"{style.prompt} 真實即時日期是 {current_date}。"}
         ]
+        
+        # 檢查是否啟用 RAG
+        rag_enabled = ConfigManager.get("RAG_ENABLED", "False") == "True"
+        if rag_enabled:
+            try:
+                from rag_service import RAGService
+                rag_context = RAGService.get_context_for_query(user_message)
+                if rag_context:
+                    messages.append({
+                        "role": "system", 
+                        "content": f"以下是可能對回答有幫助的知識庫資訊：{rag_context}"
+                    })
+            except Exception as rag_error:
+                logger.error(f"API RAG error: {rag_error}")
+        
+        # 檢查是否啟用網路搜尋
+        web_search_enabled = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
+        if web_search_enabled and '/搜尋' in user_message:
+            try:
+                from web_search_service import WebSearchService
+                search_info = WebSearchService.get_search_results_for_query(user_message.replace('/搜尋', '').strip())
+                if search_info:
+                    messages.append({
+                        "role": "system", 
+                        "content": f"以下是來自網路搜尋的資訊：{search_info}"
+                    })
+            except Exception as search_error:
+                logger.error(f"API web search error: {search_error}")
+        
+        # 添加用戶訊息
+        messages.append({"role": "user", "content": user_message})
         
         # 呼叫API
         response = client.chat.completions.create(

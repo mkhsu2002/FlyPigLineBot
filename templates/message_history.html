@@ -11,6 +11,12 @@
             <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="mb-0">聊天訊息</h5>
                 <div>
+                    <a href="{{ url_for('admin.export_messages', format='csv') }}" class="btn btn-sm btn-outline-primary me-2">
+                        <i class="bi bi-download"></i> 匯出 CSV
+                    </a>
+                    <a href="{{ url_for('admin.export_messages', format='json') }}" class="btn btn-sm btn-outline-info me-2">
+                        <i class="bi bi-download"></i> 匯出 JSON
+                    </a>
                     <button type="button" class="btn btn-sm btn-outline-secondary" id="refreshBtn">
                         <i class="bi bi-arrow-clockwise"></i> 重新整理
                     </button>
