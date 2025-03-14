@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}錯誤 | FlyPig LINE Bot{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-8 mx-auto">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">發生錯誤</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-exclamation-triangle fa-4x text-danger mb-4"></i>
+                    <h5 class="card-title">{{ error_message }}</h5>
+                    {% if error_id %}
+                    <p class="card-text text-muted">錯誤 ID: {{ error_id }}</p>
+                    {% endif %}
+                    <p class="mt-4">請稍後再試，或聯繫系統管理員獲取幫助。</p>
+                    <div class="mt-4">
+                        <a href="/" class="btn btn-primary">返回首頁</a>
+                        <a href="javascript:history.back()" class="btn btn-outline-secondary ml-2">返回上一頁</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

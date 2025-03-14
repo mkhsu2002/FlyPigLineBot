@@ -81,27 +81,70 @@ class RAGService:
                 index.reset()
                 doc_embeddings = {}
             
-            # Generate embeddings for all documents
-            for doc in documents:
-                embedding = RAGService.get_embedding(doc.content, client)
-                if embedding:
-                    # Convert to numpy array and reshape
-                    embedding_np = np.array(embedding).astype('float32').reshape(1, -1)
-                    
-                    # Add to index
-                    index.add(embedding_np)
-                    doc_embeddings[index.ntotal - 1] = {
-                        "id": doc.id,
-                        "title": doc.title,
-                        "content": doc.content[:1000]  # Store a preview of the content
-                    }
+            # 分批處理文件，避免記憶體溢出
+            batch_size = 5  # 每批處理的文件數量
+            total_docs = len(documents)
+            processed_docs = 0
             
-            # Save index to file
+            for i in range(0, total_docs, batch_size):
+                batch_docs = documents[i:i+batch_size]
+                # Generate embeddings for documents in this batch
+                for doc in batch_docs:
+                    try:
+                        # 設置重試機制
+                        max_retries = 3
+                        retry_delay = 1
+                        embedding = None
+                        
+                        for attempt in range(max_retries):
+                            try:
+                                embedding = RAGService.get_embedding(doc.content, client)
+                                if embedding:
+                                    break
+                                
+                                if attempt < max_retries - 1:
+                                    import time
+                                    time.sleep(retry_delay)
+                                    retry_delay *= 2
+                            except Exception as retry_error:
+                                logger.warning(f"Retry {attempt+1}/{max_retries} failed for document {doc.id}: {retry_error}")
+                                if attempt < max_retries - 1:
+                                    import time
+                                    time.sleep(retry_delay)
+                                    retry_delay *= 2
+                        
+                        if embedding:
+                            # Convert to numpy array and reshape
+                            embedding_np = np.array(embedding).astype('float32').reshape(1, -1)
+                            
+                            # Add to index
+                            index.add(embedding_np)
+                            
+                            # 僅保存必要的摘要信息，節省記憶體
+                            content_preview = doc.content[:500] if len(doc.content) > 500 else doc.content
+                            doc_embeddings[index.ntotal - 1] = {
+                                "id": doc.id,
+                                "title": doc.title,
+                                "content": content_preview
+                            }
+                            processed_docs += 1
+                    except Exception as doc_error:
+                        logger.error(f"Error processing document {doc.id}: {doc_error}")
+                        continue
+                
+                # 每批處理完成后保存一次索引，確保進度不丟失
+                if i + batch_size >= total_docs or (i > 0 and i % (batch_size * 3) == 0):
+                    faiss.write_index(index, RAGService.INDEX_PATH)
+                    with open(RAGService.EMBEDDINGS_PATH, 'wb') as f:
+                        pickle.dump(doc_embeddings, f)
+                    logger.info(f"Interim save: Processed {processed_docs}/{total_docs} documents")
+            
+            # 最終保存索引
             faiss.write_index(index, RAGService.INDEX_PATH)
             with open(RAGService.EMBEDDINGS_PATH, 'wb') as f:
                 pickle.dump(doc_embeddings, f)
                 
-            logger.info(f"Updated FAISS index with {len(documents)} documents")
+            logger.info(f"Updated FAISS index with {processed_docs}/{total_docs} documents")
             return True
         except Exception as e:
             logger.error(f"Error updating FAISS index: {e}")

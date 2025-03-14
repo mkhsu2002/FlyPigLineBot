@@ -1,12 +1,18 @@
 import os
+import time
 import logging
-from flask import Flask
+import traceback
+from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.exc import SQLAlchemyError
 from flask_login import LoginManager
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
 logger = logging.getLogger(__name__)
 
 class Base(DeclarativeBase):
@@ -113,9 +119,120 @@ app.register_blueprint(webhook_bp)
 app.register_blueprint(auth_bp)
 
 # Create knowledge_base directory if it doesn't exist
-import os
 if not os.path.exists("knowledge_base"):
     os.makedirs("knowledge_base")
     logger.info("Created knowledge_base directory")
+
+# 全局錯誤處理器
+@app.errorhandler(Exception)
+def handle_exception(e):
+    """全局異常處理器，捕獲所有未處理的異常"""
+    error_id = int(time.time())
+    
+    # 打印詳細錯誤信息到日誌
+    logger.error(f"Unhandled exception [{error_id}]: {str(e)}")
+    logger.error(traceback.format_exc())
+    
+    # 記錄錯誤到數據庫
+    try:
+        from models import LogEntry
+        log_entry = LogEntry(
+            level="ERROR",
+            message=f"Unhandled exception: {str(e)}",
+            module=request.path,
+        )
+        db.session.add(log_entry)
+        db.session.commit()
+    except Exception as log_error:
+        logger.error(f"Failed to log error to database: {log_error}")
+    
+    # 根據請求類型返回不同的響應
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': '系統處理請求時發生錯誤，請稍後再試',
+            'error_id': error_id
+        }), 500
+    
+    # 對於 webhook 路徑返回 200 OK 避免 LINE 平台重發請求
+    if request.path == '/webhook' and request.method == 'POST':
+        return 'OK', 200
+    
+    # 對於普通網頁請求，返回友好的錯誤頁面
+    return render_template('error.html', 
+                          error_message='處理您的請求時出現了問題',
+                          error_id=error_id), 500
+
+# 數據庫錯誤處理器
+@app.errorhandler(SQLAlchemyError)
+def handle_sqlalchemy_error(e):
+    """處理數據庫相關錯誤"""
+    error_id = int(time.time())
+    
+    # 打印詳細錯誤信息到日誌
+    logger.error(f"Database error [{error_id}]: {str(e)}")
+    
+    # 回滾事務
+    try:
+        db.session.rollback()
+    except:
+        pass
+    
+    # 根據請求類型返回不同的響應
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'error': 'Database Error',
+            'message': '數據庫操作發生錯誤，請稍後再試',
+            'error_id': error_id
+        }), 500
+    
+    # 對於 webhook 路徑返回 200 OK 避免 LINE 平台重發請求
+    if request.path == '/webhook' and request.method == 'POST':
+        return 'OK', 200
+    
+    # 對於普通網頁請求，返回友好的錯誤頁面
+    return render_template('error.html', 
+                          error_message='數據庫操作發生錯誤，請稍後再試',
+                          error_id=error_id), 500
+
+# 創建自定義的 500 錯誤響應
+@app.errorhandler(500)
+def internal_server_error(e):
+    """自定義 500 錯誤處理"""
+    error_id = int(time.time())
+    logger.error(f"500 error [{error_id}]: {request.path}")
+    
+    # 根據請求類型返回不同的響應
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'error': 'Internal Server Error',
+            'message': '伺服器內部錯誤，請稍後再試',
+            'error_id': error_id
+        }), 500
+    
+    # 對於 webhook 路徑返回 200 OK 避免 LINE 平台重發請求
+    if request.path == '/webhook' and request.method == 'POST':
+        return 'OK', 200
+    
+    # 對於普通網頁請求，返回友好的錯誤頁面
+    return render_template('error.html', 
+                          error_message='伺服器發生內部錯誤，請稍後再試',
+                          error_id=error_id), 500
+
+# 自定義 404 錯誤響應
+@app.errorhandler(404)
+def page_not_found(e):
+    """自定義 404 錯誤處理"""
+    # 對於 API 請求返回 JSON 格式的錯誤訊息
+    if request.path.startswith('/api/') or request.headers.get('Accept') == 'application/json':
+        return jsonify({
+            'error': 'Not Found',
+            'message': '請求的資源不存在'
+        }), 404
+    
+    # 對於普通網頁請求，返回友好的錯誤頁面
+    return render_template('error.html', 
+                          error_message='找不到您請求的頁面', 
+                          error_id=None), 404
 
 logger.info("Application initialization complete")
