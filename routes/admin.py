@@ -18,11 +18,18 @@ def get_db():
     from app import db
     return db
 
+def get_models():
+    """延遲導入模型以避免循環引用"""
+    # 這些導入已經在頂部完成，但我們仍需此函數來保持一致性
+    return BotStyle, LineUser, ChatMessage, User, Document
+
 def get_llm_service():
+    """延遲導入LLM服務以避免循環引用"""
     from services.llm_service import LLMService
     return LLMService
 
 def get_rag_service():
+    """延遲導入RAG服務以避免循環引用"""
     from rag_service import RAGService
     return RAGService
 
@@ -315,8 +322,12 @@ def export_messages():
     export_format = request.args.get('format', 'csv').lower()
     user_id = request.args.get('user_id')
     
+    # 獲取數據庫會話和模型
+    db = get_db()
+    ChatMessage, _, _, _, _ = get_models()
+    
     # Build query
-    query = ChatMessage.query
+    query = db.session.query(ChatMessage)
     if user_id:
         query = query.filter_by(line_user_id=user_id)
     
@@ -775,7 +786,11 @@ def import_bot_settings():
 @admin_required
 def export_bot_styles():
     """Export all bot styles as JSON file"""
-    styles = BotStyle.query.all()
+    # 獲取數據庫會話和模型
+    db = get_db()
+    BotStyle, _, _, _, _ = get_models()
+    
+    styles = db.session.query(BotStyle).all()
     export_data = []
     
     for style in styles:
