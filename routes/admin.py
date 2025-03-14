@@ -442,6 +442,8 @@ def add_document():
 @admin_required
 def bulk_upload():
     """Bulk upload multiple documents to the knowledge base"""
+    # 獲取 RAG 服務
+    RAGService = get_rag_service()
     if 'files' not in request.files:
         flash('未選擇任何檔案', 'danger')
         return redirect(url_for('admin.knowledge_base'))
@@ -606,7 +608,11 @@ def export_knowledge_base():
 @admin_required
 def user_management():
     """User management page for admin panel users"""
-    users = User.query.all()
+    # 獲取數據庫會話和模型
+    db = get_db()
+    User, _, _, _, _ = get_models()
+    
+    users = db.session.query(User).all()
     form = UserForm()
     return render_template('user_management.html', users=users, form=form)
 
@@ -614,15 +620,19 @@ def user_management():
 @admin_required
 def add_user():
     """Add a new admin panel user"""
+    # 獲取數據庫會話和模型
+    db = get_db()
+    User, _, _, _, _ = get_models()
+    
     form = UserForm()
     
     if form.validate_on_submit():
         # Check if username or email already exists
-        if User.query.filter_by(username=form.username.data).first():
+        if db.session.query(User).filter_by(username=form.username.data).first():
             flash(f'Username "{form.username.data}" is already taken.', 'danger')
             return redirect(url_for('admin.user_management'))
         
-        if User.query.filter_by(email=form.email.data).first():
+        if db.session.query(User).filter_by(email=form.email.data).first():
             flash(f'Email "{form.email.data}" is already registered.', 'danger')
             return redirect(url_for('admin.user_management'))
         
@@ -655,23 +665,27 @@ def add_user():
 @admin_required
 def edit_user(user_id):
     """Edit an existing admin panel user"""
-    user = User.query.get_or_404(user_id)
+    # 獲取數據庫會話和模型
+    db = get_db()
+    User, _, _, _, _ = get_models()
+    
+    user = db.session.query(User).get_or_404(user_id)
     form = UserForm()
     
     # Don't allow non-admin to edit the last admin
     if user.is_admin and not form.is_admin.data:
-        admin_count = User.query.filter_by(is_admin=True).count()
+        admin_count = db.session.query(User).filter_by(is_admin=True).count()
         if admin_count <= 1:
             flash('Cannot remove admin status from the last admin user.', 'danger')
             return redirect(url_for('admin.user_management'))
     
     if form.validate_on_submit():
         # Check username and email uniqueness if changed
-        if form.username.data != user.username and User.query.filter_by(username=form.username.data).first():
+        if form.username.data != user.username and db.session.query(User).filter_by(username=form.username.data).first():
             flash(f'Username "{form.username.data}" is already taken.', 'danger')
             return redirect(url_for('admin.user_management'))
         
-        if form.email.data != user.email and User.query.filter_by(email=form.email.data).first():
+        if form.email.data != user.email and db.session.query(User).filter_by(email=form.email.data).first():
             flash(f'Email "{form.email.data}" is already registered.', 'danger')
             return redirect(url_for('admin.user_management'))
         
@@ -699,11 +713,15 @@ def edit_user(user_id):
 @admin_required
 def delete_user(user_id):
     """Delete an admin panel user"""
-    user = User.query.get_or_404(user_id)
+    # 獲取數據庫會話和模型
+    db = get_db()
+    User, _, _, _, _ = get_models()
+    
+    user = db.session.query(User).get_or_404(user_id)
     
     # Don't allow deleting the last admin
     if user.is_admin:
-        admin_count = User.query.filter_by(is_admin=True).count()
+        admin_count = db.session.query(User).filter_by(is_admin=True).count()
         if admin_count <= 1:
             flash('Cannot delete the last admin user.', 'danger')
             return redirect(url_for('admin.user_management'))
@@ -724,7 +742,11 @@ def delete_user(user_id):
 @admin_required
 def get_user(user_id):
     """Get a user as JSON for editing"""
-    user = User.query.get_or_404(user_id)
+    # 獲取數據庫會話和模型
+    db = get_db()
+    User, _, _, _, _ = get_models()
+    
+    user = db.session.query(User).get_or_404(user_id)
     return jsonify({
         'id': user.id,
         'username': user.username,
@@ -837,6 +859,10 @@ def export_bot_styles():
 @admin_required
 def import_bot_styles():
     """Import bot styles from JSON file"""
+    # 獲取數據庫會話和模型
+    db = get_db()
+    BotStyle, _, _, _, _ = get_models()
+    
     if 'styles_file' not in request.files:
         flash('未選擇風格檔案', 'danger')
         return redirect(url_for('admin.bot_styles'))
@@ -873,7 +899,7 @@ def import_bot_styles():
                 continue
             
             # Check if style exists
-            existing = BotStyle.query.filter_by(name=style_data['name']).first()
+            existing = db.session.query(BotStyle).filter_by(name=style_data['name']).first()
             if existing and not overwrite:
                 logger.info(f"Skipping existing style: {style_data['name']}")
                 skipped_count += 1
@@ -884,14 +910,14 @@ def import_bot_styles():
                 existing.prompt = style_data['prompt']
                 existing.description = style_data.get('description', '')
                 if 'is_default' in style_data and style_data['is_default']:
-                    BotStyle.query.update({'is_default': False})
+                    db.session.query(BotStyle).update({'is_default': False})
                     existing.is_default = True
                     ConfigManager.set("ACTIVE_BOT_STYLE", existing.name)
             else:
                 # Create new style
                 is_default = style_data.get('is_default', False)
                 if is_default:
-                    BotStyle.query.update({'is_default': False})
+                    db.session.query(BotStyle).update({'is_default': False})
                     
                 new_style = BotStyle(
                     name=style_data['name'],
@@ -967,7 +993,8 @@ def import_llm_settings():
                 flash(f'設定檔案缺少必要欄位: {field}', 'danger')
                 return redirect(url_for('admin.llm_settings'))
         
-        # Validate API key
+        # 獲取 LLM 服務並驗證 API key
+        LLMService = get_llm_service()
         valid, message = LLMService.validate_api_key(settings['api_key'])
         if not valid:
             flash(f'API 金鑰驗證失敗: {message}', 'danger')
