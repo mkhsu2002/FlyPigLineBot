@@ -1,19 +1,29 @@
 import json
 import logging
+import os
 from flask import Blueprint, request, abort
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
-from models import ChatMessage, LineUser, db
-from config import get_line_config
+from models import ChatMessage, LineUser
+# 避免循環導入，使用函數延遲導入
+# from app import db
 from llm_service import LLMService
-from rag_service import RAGService
+# 避免循環導入
+# from rag_service import RAGService
 from web_search_service import WebSearchService
+from routes.utils.config_service import get_line_config
 
+# 創建藍圖
 webhook_bp = Blueprint('webhook', __name__)
 logger = logging.getLogger(__name__)
+
+# 延遲導入數據庫會話
+def get_db():
+    from app import db
+    return db
 
 # Initialize the LINE Bot API and handler
 def get_line_bot_api():
@@ -51,8 +61,7 @@ def line_webhook():
     
     return 'OK'
 
-# Define the event handler for text messages
-@get_line_webhook_handler().add(MessageEvent, message=TextMessage)
+# 預先定義處理函數，稍後再註冊到處理程序
 def handle_text_message(event):
     """Handle text messages from LINE users"""
     # 設置重試機制參數
@@ -88,6 +97,8 @@ def handle_text_message(event):
                         # 創建一個最小用戶記錄
                         line_user = LineUser(line_user_id=user_id)
                     
+                    # 獲取數據庫會話
+                    db = get_db()
                     db.session.add(line_user)
                     db.session.commit()
                 
@@ -97,11 +108,15 @@ def handle_text_message(event):
                     is_user_message=True,
                     message_text=user_message
                 )
+                # 獲取數據庫會話（如果尚未獲取）
+                db = get_db()
                 db.session.add(chat_message)
                 db.session.commit()
                 break  # 成功後退出重試循環
             except Exception as db_error:
                 logger.error(f"Database error (attempt {db_attempt+1}/{max_db_retries}): {db_error}")
+                # 獲取數據庫會話並回滾
+                db = get_db()
                 db.session.rollback()  # 回滾事務
                 
                 if db_attempt < max_db_retries - 1:
@@ -120,6 +135,8 @@ def handle_text_message(event):
                 style_name = user_message[7:].strip()
                 # 設置用戶首選風格
                 line_user.active_style = style_name
+                # 獲取數據庫會話（如果尚未獲取）
+                db = get_db()
                 db.session.commit()
                 
                 response_text = f"風格設定為: {style_name}"
@@ -131,6 +148,8 @@ def handle_text_message(event):
                     message_text=response_text,
                     bot_style=style_name
                 )
+                # 獲取數據庫會話（如果尚未獲取）
+                db = get_db()
                 db.session.add(bot_message)
                 db.session.commit()
                 
@@ -143,6 +162,8 @@ def handle_text_message(event):
                 return
             except Exception as style_error:
                 logger.error(f"Error processing style command: {style_error}")
+                # 獲取數據庫會話並回滾
+                db = get_db()
                 db.session.rollback()
                 response_text = "很抱歉，設定風格時出現問題，請稍後再試。"
         
@@ -175,6 +196,8 @@ def handle_text_message(event):
                 # 如果启用了 RAG，获取上下文
                 rag_context = None
                 try:
+                    # 動態導入 RAGService 避免循環導入
+                    from rag_service import RAGService
                     rag_context = RAGService.get_context_for_query(user_message)
                 except Exception as rag_error:
                     logger.error(f"Error getting RAG context: {rag_error}")
@@ -197,10 +220,14 @@ def handle_text_message(event):
                 message_text=response_text,
                 bot_style=bot_style
             )
+            # 獲取數據庫會話（如果尚未獲取）
+            db = get_db()
             db.session.add(bot_message)
             db.session.commit()
         except Exception as db_save_error:
             logger.error(f"Error saving bot response to database: {db_save_error}")
+            # 獲取數據庫會話並回滾
+            db = get_db()
             db.session.rollback()
             # 繼續發送回應，即使無法保存到數據庫
         

@@ -24,10 +24,16 @@ class ConfigManager:
         import models
         
         # Then check the database
-        config_entry = models.Config.query.filter_by(key=key).first()
-        if config_entry and config_entry.value:
-            ConfigManager._config_cache[key] = config_entry.value
-            return config_entry.value
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                config_entry = models.Config.query.filter_by(key=key).first()
+                if config_entry and config_entry.value:
+                    ConfigManager._config_cache[key] = config_entry.value
+                    return config_entry.value
+        except RuntimeError:
+            # 如果不在應用上下文內，返回默認值
+            pass
         
         # Return the default value if nothing found
         return default
@@ -43,14 +49,20 @@ class ConfigManager:
         import models
         
         # Update database
-        config_entry = models.Config.query.filter_by(key=key).first()
-        if config_entry:
-            config_entry.value = value
-        else:
-            new_config = models.Config(key=key, value=value)
-            db.session.add(new_config)
-        
-        db.session.commit()
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                config_entry = models.Config.query.filter_by(key=key).first()
+                if config_entry:
+                    config_entry.value = value
+                else:
+                    new_config = models.Config(key=key, value=value)
+                    db.session.add(new_config)
+                
+                db.session.commit()
+        except RuntimeError:
+            # 如果不在應用上下文內，僅更新緩存
+            pass
     
     @staticmethod
     def get_all():
@@ -58,16 +70,23 @@ class ConfigManager:
         # For database operations, we import here to avoid circular imports
         import models
         
-        configs = models.Config.query.all()
         result = {}
         
-        for config in configs:
-            # Check if there's an environment variable that overrides the database value
-            env_value = os.environ.get(config.key)
-            if env_value is not None:
-                result[config.key] = env_value
-            else:
-                result[config.key] = config.value
+        try:
+            from flask import current_app
+            with current_app.app_context():
+                configs = models.Config.query.all()
+                
+                for config in configs:
+                    # Check if there's an environment variable that overrides the database value
+                    env_value = os.environ.get(config.key)
+                    if env_value is not None:
+                        result[config.key] = env_value
+                    else:
+                        result[config.key] = config.value
+        except RuntimeError:
+            # 如果不在應用上下文內，返回空結果
+            pass
                 
         return result
     

@@ -110,13 +110,32 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Register blueprints
-from routes.admin import admin_bp
-from routes.webhook import webhook_bp
-from routes.auth import auth_bp
+def register_blueprints():
+    # 所有藍圖都使用延遲導入，避免循環引用
+    from routes.webhook import webhook_bp
+    from routes.auth import auth_bp
+    # 註冊 LINE Webhook 處理程序
+    from routes.webhook import handle_text_message
+    from linebot.models import MessageEvent, TextMessage
+    
+    # 動態獲取 webhook handler 並註冊事件處理程序
+    from routes.webhook import get_line_webhook_handler
+    webhook_handler = get_line_webhook_handler()
+    webhook_handler.add(MessageEvent, message=TextMessage)(handle_text_message)
+    
+    # 註冊藍圖
+    app.register_blueprint(webhook_bp)
+    app.register_blueprint(auth_bp)
+    
+    # 管理面板藍圖最後註冊，避免循環導入
+    try:
+        from routes.admin import admin_bp
+        app.register_blueprint(admin_bp)
+    except ImportError as e:
+        logger.error(f"無法導入管理面板藍圖: {e}")
 
-app.register_blueprint(admin_bp)
-app.register_blueprint(webhook_bp)
-app.register_blueprint(auth_bp)
+# 註冊藍圖
+register_blueprints()
 
 # Create knowledge_base directory if it doesn't exist
 if not os.path.exists("knowledge_base"):

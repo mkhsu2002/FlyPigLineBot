@@ -4,7 +4,8 @@ import logging
 from openai import OpenAI
 from routes.utils.config_service import ConfigManager, get_openai_api_key, get_llm_settings
 import models
-from app import db
+# 避免循環導入問題
+from flask import current_app
 
 logger = logging.getLogger(__name__)
 
@@ -39,6 +40,7 @@ class LLMService:
                     prompt="你是阿昌，和宸清潔庇護工場的代言人，一生奉獻給公益，關懷弱勢，充滿理想與正能量，只用繁體中文聊天，專注陪伴聊天，不碰程式碼或畫圖。",
                     is_default=True
                 )
+                from app import db
                 db.session.add(style)
                 db.session.commit()
         

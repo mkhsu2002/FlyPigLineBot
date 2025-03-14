@@ -3,9 +3,11 @@ import logging
 import numpy as np
 import faiss
 import pickle
-from models import Document, db
+from models import Document
+from flask import current_app
 from config import is_rag_enabled
 from llm_service import LLMService
+from app import db
 
 logger = logging.getLogger(__name__)
 
@@ -219,6 +221,7 @@ class RAGService:
                 filename=filename,
                 is_active=True
             )
+
             db.session.add(doc)
             db.session.commit()
             

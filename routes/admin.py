@@ -2,18 +2,29 @@ import os
 import logging
 import json
 from datetime import datetime
-from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response
+from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
 from models import BotStyle, Config, ChatMessage, Document, LineUser, User
-from app import db
 from forms import LLMSettingsForm, BotStyleForm, BotSettingsForm, DocumentForm, UserForm, BulkUploadForm
 from routes.utils.config_service import ConfigManager
-from services.llm_service import LLMService
-from rag_service import RAGService
 
+# 創建藍圖但不直接導入可能導致循環引用的模塊
 admin_bp = Blueprint('admin', __name__)
 logger = logging.getLogger(__name__)
+
+# 使用延遲導入避免循環引用問題
+def get_db():
+    from app import db
+    return db
+
+def get_llm_service():
+    from services.llm_service import LLMService
+    return LLMService
+
+def get_rag_service():
+    from rag_service import RAGService
+    return RAGService
 
 # Admin access decorator
 def admin_required(f):
@@ -77,7 +88,8 @@ def llm_settings():
     
     # Process form submission
     if form.validate_on_submit():
-        # Validate API key
+        # 取得 LLM 服務並驗證 API 密鑰
+        LLMService = get_llm_service()
         valid, message = LLMService.validate_api_key(form.api_key.data)
         
         if valid:
@@ -177,6 +189,8 @@ def add_bot_style():
             BotStyle.query.update({'is_default': False})
             ConfigManager.set("ACTIVE_BOT_STYLE", form.name.data)
         
+        # 獲取數據庫會話
+        db = get_db()
         db.session.add(style)
         db.session.commit()
         
@@ -394,7 +408,8 @@ def add_document():
             flash('文件必須包含內容，可以從文字欄位或上傳檔案獲取', 'danger')
             return redirect(url_for('admin.knowledge_base'))
         
-        # Add document
+        # 取得 RAG 服務並添加文檔
+        RAGService = get_rag_service()
         success, result = RAGService.add_document(title, content, filename)
         
         if success:
