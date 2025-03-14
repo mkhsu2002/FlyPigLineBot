@@ -5,7 +5,6 @@ from datetime import datetime
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, make_response, current_app
 from flask_login import login_required, current_user
 from werkzeug.utils import secure_filename
-from models import BotStyle, Config, ChatMessage, Document, LineUser, User
 from forms import LLMSettingsForm, BotStyleForm, BotSettingsForm, DocumentForm, UserForm, BulkUploadForm
 from routes.utils.config_service import ConfigManager
 
@@ -20,7 +19,9 @@ def get_db():
 
 def get_models():
     """延遲導入模型以避免循環引用"""
-    # 這些導入已經在頂部完成，但我們仍需此函數來保持一致性
+    # 從 app 模組中導入 SQLAlchemy 連接的模型類
+    # 這樣可以確保我們使用的是與數據庫相連接的模型類，而不是純粹的 models.py 中的類
+    from app import BotStyle, LineUser, ChatMessage, User, Document
     return BotStyle, LineUser, ChatMessage, User, Document
 
 def get_llm_service():
@@ -50,6 +51,9 @@ def admin_required(f):
 @admin_required
 def dashboard():
     """Admin dashboard displaying system overview"""
+    # 獲取數據庫會話和模型
+    BotStyle, LineUser, ChatMessage, _, Document = get_models()
+    
     # Get stats
     user_count = LineUser.query.count()
     message_count = ChatMessage.query.count()
@@ -117,6 +121,9 @@ def llm_settings():
 @admin_required
 def bot_settings():
     """LINE Bot settings configuration page"""
+    # 獲取數據庫會話和模型
+    BotStyle, _, _, _, _ = get_models()
+    
     form = BotSettingsForm()
     
     # Get all available styles for the dropdown
@@ -166,6 +173,9 @@ def bot_settings():
 @admin_required
 def bot_styles():
     """Bot styles management page"""
+    # 獲取數據庫會話和模型
+    BotStyle, _, _, _, _ = get_models()
+    
     styles = BotStyle.query.all()
     form = BotStyleForm()
     return render_template('bot_styles.html', styles=styles, form=form)
@@ -213,6 +223,10 @@ def add_bot_style():
 @admin_required
 def edit_bot_style(style_id):
     """Edit an existing bot style"""
+    # 獲取數據庫會話和模型
+    db = get_db()
+    BotStyle, _, _, _, _ = get_models()
+    
     style = BotStyle.query.get_or_404(style_id)
     form = BotStyleForm()
     
@@ -252,6 +266,10 @@ def edit_bot_style(style_id):
 @admin_required
 def delete_bot_style(style_id):
     """Delete a bot style"""
+    # 獲取數據庫會話和模型
+    db = get_db()
+    BotStyle, _, _, _, _ = get_models()
+    
     style = BotStyle.query.get_or_404(style_id)
     
     # Don't allow deleting the default style
@@ -297,6 +315,9 @@ def get_bot_style(style_id):
 @admin_required
 def message_history():
     """Message history page"""
+    # 獲取數據庫會話和模型
+    BotStyle, LineUser, ChatMessage, _, _ = get_models()
+    
     # Get filter parameters
     user_id = request.args.get('user_id')
     page = request.args.get('page', 1, type=int)
