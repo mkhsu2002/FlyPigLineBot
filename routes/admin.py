@@ -14,17 +14,17 @@ logger = logging.getLogger(__name__)
 
 # 使用延遲導入避免循環引用問題
 def get_db():
-    from main import db
+    from app import db
     return db
 
 def get_models():
     """延遲導入模型以避免循環引用"""
     # 從 main 模組中導入 SQLAlchemy 連接的模型類
-    from main import BotStyle, ChatMessage, User, Config
+    from app import BotStyle, ChatMessage, User, Config
     
     # Document 類可能定義在 models.py 或其他模塊
     try:
-        from main import Document
+        from app import Document
     except ImportError:
         from models import Document
     
@@ -141,9 +141,9 @@ def bot_settings():
     
     # Pre-fill form with current settings
     if request.method == 'GET':
-        form.channel_id.data = ConfigManager.get("LINE_CHANNEL_ID", "2007002420")
-        form.channel_secret.data = ConfigManager.get("LINE_CHANNEL_SECRET", "68de5af41837af7d0cf8998774f5dc04")
-        form.channel_access_token.data = ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "VaPdPpIRKyOT8VQHAu3bt/KfCy4pJmLL0O76mv5NTtakPiDrDDEyXLPiNqvldZJlMUnLSJ+sWhNpdXgXpm7SiB4bHVJFbnagaftL6IX3PGz7n/msUBX//L2s/OvuLaNcfTMA1a20CuwIzgoGjiTzMgdB04t89/1O/w1cDnyilFU=")
+        form.channel_id.data = ConfigManager.get("LINE_CHANNEL_ID", "")
+        form.channel_secret.data = ConfigManager.get("LINE_CHANNEL_SECRET", "")
+        form.channel_access_token.data = ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "")
         form.active_style.data = ConfigManager.get("ACTIVE_BOT_STYLE", "Default")
         form.rag_enabled.data = ConfigManager.get("RAG_ENABLED", "True") == "True"
         form.web_search_enabled.data = ConfigManager.get("WEB_SEARCH_ENABLED", "False") == "True"
@@ -163,13 +163,27 @@ def bot_settings():
         flash('Bot settings updated successfully.', 'success')
         return redirect(url_for('admin.bot_settings'))
     
-    # Get the webhook URL for display
-    webhook_url = request.host_url.rstrip('/') + url_for('webhook.line_webhook')
+    # 獲取 Webhook URL 並確保它使用 HTTPS (LINE 需要 HTTPS)
+    webhook_path = url_for('webhook.line_webhook')
+    host_url = request.host_url.rstrip('/')
+    
+    # 檢查是否為生產環境（不是 localhost 或 127.0.0.1）
+    is_local = 'localhost' in host_url or '127.0.0.1' in host_url
+    
+    # 生產環境應使用 HTTPS
+    if not is_local and host_url.startswith('http:'):
+        host_url = host_url.replace('http:', 'https:')
+        webhook_url = f"{host_url}{webhook_path}"
+        webhook_warning = "您的服務器似乎未使用 HTTPS。LINE Messaging API 要求 Webhook URL 必須使用 HTTPS。"
+    else:
+        webhook_url = f"{host_url}{webhook_path}"
+        webhook_warning = None if host_url.startswith('https:') or is_local else "您的服務器需要配置 HTTPS 才能與 LINE 平台通信。"
     
     return render_template(
         'bot_settings.html', 
         form=form, 
         webhook_url=webhook_url,
+        webhook_warning=webhook_warning,
         styles=styles,
         active_style=ConfigManager.get("ACTIVE_BOT_STYLE", "Default"),
         rag_enabled=ConfigManager.get("RAG_ENABLED", "True") == "True",

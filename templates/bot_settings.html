@@ -87,10 +87,15 @@
             <div class="card-body">
                 <p class="mb-2">在您的 LINE 開發者控制台中使用以下網址：</p>
                 <div class="input-group mb-3">
-                    <input type="text" class="form-control" id="webhookUrl" value="{{ request.host_url }}webhook" readonly>
+                    <input type="text" class="form-control" id="webhookUrl" value="{{ webhook_url }}" readonly>
                     <button class="btn btn-outline-secondary" type="button" id="copyWebhook" onclick="copyWebhookUrl()">複製</button>
                 </div>
                 <p class="small text-muted mb-0">這是 LINE 用來發送訊息到您的機器人的網址。</p>
+                {% if webhook_warning %}
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ webhook_warning }}
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>

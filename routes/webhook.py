@@ -1,16 +1,16 @@
 import json
 import logging
 import os
-from flask import Blueprint, request, abort
+from flask import Blueprint, request, abort, jsonify
 from linebot import LineBotApi, WebhookHandler
 from linebot.exceptions import InvalidSignatureError
 from linebot.models import (
     MessageEvent, TextMessage, TextSendMessage,
 )
 # 避免循環導入，使用函數延遲導入
-from llm_service import LLMService
+from services.llm_service import LLMService
 # 避免循環導入
-# from rag_service import RAGService
+from rag_service import RAGService
 from web_search_service import WebSearchService
 from routes.utils.config_service import get_line_config
 

@@ -102,9 +102,9 @@ def get_openai_api_key():
 # Helper function to get LINE channel configuration
 def get_line_config():
     return {
-        "channel_id": ConfigManager.get("LINE_CHANNEL_ID", "2007002420"),
-        "channel_secret": ConfigManager.get("LINE_CHANNEL_SECRET", "68de5af41837af7d0cf8998774f5dc04"),
-        "channel_access_token": ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "VaPdPpIRKyOT8VQHAu3bt/KfCy4pJmLL0O76mv5NTtakPiDrDDEyXLPiNqvldZJlMUnLSJ+sWhNpdXgXpm7SiB4bHVJFbnagaftL6IX3PGz7n/msUBX//L2s/OvuLaNcfTMA1a20CuwIzgoGjiTzMgdB04t89/1O/w1cDnyilFU=")
+        "channel_id": ConfigManager.get("LINE_CHANNEL_ID", ""),
+        "channel_secret": ConfigManager.get("LINE_CHANNEL_SECRET", ""),
+        "channel_access_token": ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "")
     }
 
 # Helper function to get the active bot style

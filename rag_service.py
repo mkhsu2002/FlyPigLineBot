@@ -5,7 +5,7 @@ import faiss
 import pickle
 from flask import current_app
 from config import is_rag_enabled
-from llm_service import LLMService
+from services.llm_service import LLMService
 from app import db
 
 # 延遲導入模型函數

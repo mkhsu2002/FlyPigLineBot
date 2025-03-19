@@ -128,16 +128,44 @@ cython_debug/
 
 # Knowledge base index files
 knowledge_base/
+knowledge_base/*.idx
+knowledge_base/*.pkl
+faiss_index.idx
+embeddings.pkl
 
 # Database files
 *.db
+flypig.db
+*.sqlite
+*.sqlite3
 
 # IDE specific files
 .idea/
 .vscode/
 *.swp
 *.swo
+*.sublime-project
+*.sublime-workspace
 
 # Project specific
 logs/
 temp/
+uploads/
+.DS_Store
+
+# Sensitive information
+.env.local
+.env.development
+.env.test
+.env.production
+config.local.py
+
+# Replit specific
+.replit
+replit.nix
+.cache/
+.upm/
+.config/
+.breakpoints
+venv/
+.pythonlibs/

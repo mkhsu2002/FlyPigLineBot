@@ -24,7 +24,12 @@ login_manager = LoginManager()
 
 # Create the app
 app = Flask(__name__)
-app.secret_key = os.environ.get("SESSION_SECRET", "flypig-line-bot-secret")
+secret_key = os.environ.get("SESSION_SECRET")
+if not secret_key:
+    import secrets
+    secret_key = secrets.token_hex(16)
+    logger.warning("SESSION_SECRET 環境變量未設置，使用隨機生成的密鑰。請在生產環境中設置此環境變量以確保會話一致性。")
+app.secret_key = secret_key
 
 # Configure the database
 app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///flypig.db")
@@ -141,6 +146,44 @@ register_blueprints()
 if not os.path.exists("knowledge_base"):
     os.makedirs("knowledge_base")
     logger.info("Created knowledge_base directory")
+
+# 檢查關鍵設定是否已配置
+def check_critical_settings():
+    """檢查關鍵設定是否已正確配置"""
+    from routes.utils.config_service import ConfigManager
+    
+    # 檢查 LINE 相關設定
+    line_channel_id = ConfigManager.get("LINE_CHANNEL_ID", "")
+    line_channel_secret = ConfigManager.get("LINE_CHANNEL_SECRET", "")
+    line_channel_token = ConfigManager.get("LINE_CHANNEL_ACCESS_TOKEN", "")
+    
+    missing_settings = []
+    if not line_channel_id:
+        missing_settings.append("LINE_CHANNEL_ID")
+    if not line_channel_secret:
+        missing_settings.append("LINE_CHANNEL_SECRET")
+    if not line_channel_token:
+        missing_settings.append("LINE_CHANNEL_ACCESS_TOKEN")
+    
+    # 檢查 OpenAI API 金鑰
+    openai_api_key = ConfigManager.get("OPENAI_API_KEY", "") or os.environ.get("OPENAI_API_KEY", "")
+    if not openai_api_key:
+        missing_settings.append("OPENAI_API_KEY")
+    
+    # 顯示警告
+    if missing_settings:
+        logger.warning(f"以下關鍵設定尚未配置：{', '.join(missing_settings)}。請在管理後台中設定這些值以確保應用程式正常運行。")
+    else:
+        logger.info("所有關鍵設定已配置")
+        
+    # LINE 平台需要 HTTPS 的提醒
+    if not os.environ.get("FLASK_ENV") == "development" and not os.environ.get("RUNNING_ON_REPLIT") == "true":
+        logger.warning("LINE Messaging API 要求 Webhook URL 必須使用 HTTPS。請確保您的生產環境配置了 SSL/TLS 憑證。")
+        logger.info("提示：您可以使用 Let's Encrypt 取得免費的 SSL 憑證，或使用反向代理如 Nginx/Apache 與 Certbot。")
+
+# 在應用程式啟動時執行設定檢查
+with app.app_context():
+    check_critical_settings()
 
 # 全局錯誤處理器
 @app.errorhandler(Exception)
