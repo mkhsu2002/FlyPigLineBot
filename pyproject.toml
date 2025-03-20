@@ -1,7 +1,7 @@
 [project]
-name = "repl-nix-workspace"
+name = "FlyPigLineBotV1"
 version = "0.1.0"
-description = "Add your description here"
+description = "FlyPig Line Bot V1.0 - 基於 Flask 和 OpenAI 的 LINE 聊天機器人"
 requires-python = ">=3.11"
 dependencies = [
     "email-validator>=2.2.0",

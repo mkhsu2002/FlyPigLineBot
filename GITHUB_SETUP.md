@@ -1,6 +1,6 @@
-# FlyPig Line Bot - GitHub 設置指南
+# FlyPigLineBotV1 - GitHub 設置指南
 
-這個指南將幫助你從 GitHub 克隆 FlyPig Line Bot 專案並進行設置和部署。
+這個指南將幫助你從 GitHub 克隆 FlyPigLineBotV1 專案並進行設置和部署。
 
 ## 前置條件
 
@@ -16,10 +16,10 @@
 
 ```bash
 # 克隆存儲庫
-git clone https://github.com/[YOUR_USERNAME]/flypig-line-bot.git
+git clone https://github.com/[YOUR_USERNAME]/FlyPigLineBotV1.git
 
 # 進入專案目錄
-cd flypig-line-bot
+cd FlyPigLineBotV1
 ```
 
 ## 步驟 2：設置虛擬環境和安裝依賴
@@ -76,7 +76,7 @@ python app.py
 
 **重要：** 首次登入後請立即變更默認密碼！
 
-## 步驟 6：配置 LINE Bot 設定
+## 步驟 6：配置 FlyPigLineBotV1 設定
 
 1. 在管理後台中，前往「LINE 機器人設定」頁面
 2. 輸入您的 LINE 頻道 ID、頻道密鑰和頻道訪問令牌

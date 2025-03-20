@@ -1,6 +1,6 @@
-# FlyPig Line Bot V1.0
+# FlyPigLineBotV1
 
-FlyPig Line Bot 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專為「和宸清潔庇護工場」設計，用於關懷弱勢群體和公益活動。機器人具有多種人格風格，並提供完整的管理後台，讓非技術人員也能輕鬆管理和調整機器人行為。
+FlyPigLineBotV1 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人。機器人具有多種人格風格，並提供完整的管理後台，讓非技術人員也能輕鬆管理和調整機器人行為。
 
 ## 🌟 主要特點
 
@@ -39,8 +39,8 @@ FlyPig Line Bot 是一個基於 Flask 和 OpenAI 的 LINE 聊天機器人，專�
 
 1. 克隆此存儲庫：
    ```bash
-   git clone https://github.com/yourusername/flypig-line-bot.git
-   cd flypig-line-bot
+   git clone https://github.com/yourusername/FlyPigLineBotV1.git
+   cd FlyPigLineBotV1
    ```
 
 2. 安裝依賴：
@@ -259,7 +259,7 @@ SOFTWARE.
 
 ## 📋 版本歷史
 
-### V1.0.0 (2024年5月)
+### V1.1.0 (2024年5月)
 - 🚀 初始版本發布
 - 🤖 多種機器人風格設定（預設、風趣、正式、專業）
 - 🧠 整合 OpenAI GPT-4o 大型語言模型
@@ -272,5 +272,5 @@ SOFTWARE.
 ---
 
 開發者：FlyPig AI  
-版本：V1.0.0  
+版本：V1.1.0  
 最後更新：2024年5月
